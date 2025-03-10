@@ -10,7 +10,9 @@ file(GLOB SOURCES "src/*.cpp")
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(glm REQUIRED)
 
+include_directories(${CMAKE_SOURCE_DIR}/glm)
 include_directories(
   ${GLEW_INCLUDE_DIRS}
   ${GLFW_INCLUDE_DIRS}
@@ -19,7 +21,8 @@ include_directories(
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_libraries(${PROJECT_NAME}
-  ${OPENGL_LIBRARIES}
-  ${GLEW_LIBRARIES}
-  ${GLFW_LIBRARIES}
+    glfw
+    GLEW
+    glm
+    GL
 )
