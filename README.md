@@ -9,23 +9,23 @@ OpenGL 3D game is a simple
 * [glm](https://github.com/g-truc/glm) (v1.0.1 or higher)
 * [CMake](https://cmake.org) (v3.31.6 or higher)
 ## Installation
-    1. Clone repository:
+1. **Clone repository**:
 ```bash
 git clone https://github.com/mikolajdlugolecki/game.git
 ```
-    2. Create and go into _build_ directory:
+2. **Create and go into _build_ directory**:
 ```bash
 mkdir build && cd build
 ```
-    3. Create CMake dependencies:
+3. **Create CMake dependencies**:
 ```bash
 cmake .. && cmake --build .
 ```
-    4. Build the project:
+4. **Build the project**:
 ```bash
 make
 ```
-    5. Run the game:
+5. **Run the game**:
 ```bash
 ./Game
 ```
