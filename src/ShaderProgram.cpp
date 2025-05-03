@@ -1,108 +1,133 @@
 #include "ShaderProgram.h"
 
-ShaderProgram* spLambert;
-ShaderProgram* spConstant;
-ShaderProgram* spTextured;
-ShaderProgram* spColored;
-ShaderProgram* spLambertTextured;
-
-void initShaders() {
-	spLambert = new ShaderProgram("../shader/v_lambert.glsl", NULL, "../shader/f_lambert.glsl");
-	spConstant = new ShaderProgram("../shader/v_constant.glsl", NULL, "../shader/f_constant.glsl");
-	spTextured = new ShaderProgram("../shader/v_textured.glsl", NULL, "../shader/f_textured.glsl");
-	spColored = new ShaderProgram("../shader/v_colored.glsl", NULL, "../shader/f_colored.glsl");
-	spLambertTextured = new ShaderProgram("../shader/v_lamberttextured.glsl", NULL, "../shader/f_lamberttextured.glsl");
-}
-
-void freeShaders() {
-	delete spLambert;
-	delete spConstant;
-	delete spTextured;
-	delete spColored;
-	delete spLambertTextured;
-}
-
+//Procedure reads a file into an array of chars
 char* ShaderProgram::readFile(const char* fileName) {
 	int filesize;
 	FILE *plik;
 	char* result;
-	#pragma warning(suppress : 4996)
+
+	#pragma warning(suppress : 4996) //Turn off an error in Visual Studio stemming from Microsoft not adhering to standards
 	plik=fopen(fileName,"rb");
 	if (plik != NULL) {
 		fseek(plik, 0, SEEK_END);
 		filesize = ftell(plik);
 		fseek(plik, 0, SEEK_SET);
 		result = new char[filesize + 1];
-		#pragma warning(suppress : 6386)
+		#pragma warning(suppress : 6386) //Turn off an error in Visual Studio stemming from incorrent static code analysis
 		int readsize=fread(result, 1, filesize, plik);
 		result[filesize] = 0;
 		fclose(plik);
+
 		return result;
 	}
+
 	return NULL;
+
 }
 
+
+//The method reads a shader code, compiles it and returns a corresponding handle
 GLuint ShaderProgram::loadShader(GLenum shaderType,const char* fileName) {
-	GLuint shader = glCreateShader(shaderType);
-	const GLchar* shaderSource = readFile(fileName);
+	//Create a shader handle
+	GLuint shader=glCreateShader(shaderType);//shaderType to GL_VERTEX_SHADER, GL_GEOMETRY_SHADER lub GL_FRAGMENT_SHADER
+	//Read a shader source file into an array of chars
+	const GLchar* shaderSource=readFile(fileName);
+	//Associate source code with the shader handle
 	glShaderSource(shader,1,&shaderSource,NULL);
+	//Compile source code
 	glCompileShader(shader);
+	//Delete source code from memory (it is no longer needed)
 	delete []shaderSource;
+
+	//Download a compilation error log and display it
 	int infologLength = 0;
 	int charsWritten  = 0;
 	char *infoLog;
+
 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH,&infologLength);
-	if(infologLength > 1){
+
+	if (infologLength > 1) {
 		infoLog = new char[infologLength];
 		glGetShaderInfoLog(shader, infologLength, &charsWritten, infoLog);
 		printf("%s\n",infoLog);
 		delete []infoLog;
 	}
+
+	//Return shader handle
 	return shader;
 }
 
-ShaderProgram::ShaderProgram(const char* vertexShaderFile,const char* geometryShaderFile,const char* fragmentShaderFile){
-	vertexShader = loadShader(GL_VERTEX_SHADER, vertexShaderFile);
-	if(geometryShaderFile != NULL)
-		geometryShader = loadShader(GL_GEOMETRY_SHADER, geometryShaderFile);
-	else
-		geometryShader = 0;
-	fragmentShader = loadShader(GL_FRAGMENT_SHADER,fragmentShaderFile);
-	shaderProgram = glCreateProgram();
+ShaderProgram::ShaderProgram(const char* vertexShaderFile,const char* geometryShaderFile,const char* fragmentShaderFile) {
+	//Load vertex shader
+	printf("Loading vertex shader...\n");
+	vertexShader=loadShader(GL_VERTEX_SHADER,vertexShaderFile);
+
+	//Load geometry shader
+	if (geometryShaderFile!=NULL) {
+		printf("Loading geometry shader...\n");
+		geometryShader=loadShader(GL_GEOMETRY_SHADER,geometryShaderFile);
+	} else {
+		geometryShader=0;
+	}
+
+	//Load fragment shader
+	printf("Loading fragment shader...\n");
+	fragmentShader=loadShader(GL_FRAGMENT_SHADER,fragmentShaderFile);
+
+	//Generate shader program handle
+	shaderProgram=glCreateProgram();
+
+	//Attach shaders and link shader program
 	glAttachShader(shaderProgram,vertexShader);
 	glAttachShader(shaderProgram,fragmentShader);
 	if (geometryShaderFile!=NULL) glAttachShader(shaderProgram,geometryShader);
 	glLinkProgram(shaderProgram);
+
+	//Download an error log and display it
 	int infologLength = 0;
 	int charsWritten  = 0;
 	char *infoLog;
+
 	glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH,&infologLength);
-	if(infologLength > 1){
+
+	if (infologLength > 1)
+	{
 		infoLog = new char[infologLength];
 		glGetProgramInfoLog(shaderProgram, infologLength, &charsWritten, infoLog);
 		printf("%s\n",infoLog);
 		delete []infoLog;
 	}
+
+	printf("Shader program created \n");
 }
 
-ShaderProgram::~ShaderProgram(){
+ShaderProgram::~ShaderProgram() {
+	//Detach shaders from program
 	glDetachShader(shaderProgram, vertexShader);
 	if (geometryShader!=0) glDetachShader(shaderProgram, geometryShader);
 	glDetachShader(shaderProgram, fragmentShader);
+
+	//Delete shaders
 	glDeleteShader(vertexShader);
 	if (geometryShader!=0) glDeleteShader(geometryShader);
 	glDeleteShader(fragmentShader);
+
+	//Delete program
 	glDeleteProgram(shaderProgram);
 }
 
-void ShaderProgram::use(){
+
+//Make the shader program active
+void ShaderProgram::use() {
 	glUseProgram(shaderProgram);
 }
 
-GLuint ShaderProgram::u(const char* variableName){
+//Get the slot number corresponding to the uniform variableName
+GLuint ShaderProgram::u(const char* variableName) {
 	return glGetUniformLocation(shaderProgram,variableName);
 }
 
-GLuint ShaderProgram::a(const char* variableName){
+//Get the slot number corresponding to the attribute variableName
+GLuint ShaderProgram::a(const char* variableName) {
 	return glGetAttribLocation(shaderProgram,variableName);
 }

@@ -1,5 +1,5 @@
-# OpenGL 3D game
-OpenGL 3D game is a simple
+# Chess Simulator
+Chess Simulator is a program for animating recorded chess sessions.
 ## Table of Contents
 * [Requirements](#requirements)
 * [Installation](#installation)
