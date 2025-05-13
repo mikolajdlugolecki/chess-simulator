@@ -11,13 +11,63 @@
 #include "constants.h"
 #include "lodepng.h"
 #include "ShaderProgram.h"
-#include "myCube.h"
-#include "myTeapot.h"
+#include "Board.h"
 
 float speed_x = 0;
 float speed_y = 0;
 float aspectRatio = 1;
 ShaderProgram *sp;
+
+void genereteBoard(void){
+	int vertexIndex = 0;
+	for(int i = 0; i < BOARD_SIZE; i++){
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			float offsetX = (j - BOARD_SIZE / 2);
+			float offsetZ = (i - BOARD_SIZE / 2);
+			for(int k = 0; k < TILE_VERTEX_COUNT; k++) {
+				int base = k * 4;
+				float px = tileVertices[base + 0] + offsetX;
+				float py = tileVertices[base + 1];
+				float pz = tileVertices[base + 2] + offsetZ;
+				float pw = tileVertices[base + 3];
+				boardVertices[vertexIndex * 4 + 0] = px;
+				boardVertices[vertexIndex * 4 + 1] = py;
+				boardVertices[vertexIndex * 4 + 2] = pz;
+				boardVertices[vertexIndex * 4 + 3] = pw;
+				boardNormals[vertexIndex * 4 + 0] = 0.0f;
+				boardNormals[vertexIndex * 4 + 1] = 1.0f;
+				boardNormals[vertexIndex * 4 + 2] = 0.0f;
+				boardNormals[vertexIndex * 4 + 3] = 0.0f;
+				if(i % 2 == 0){
+					if(j % 2 == 0){
+						boardColors[vertexIndex * 4 + 0] = WHITE_TILE_COLOR_R;
+						boardColors[vertexIndex * 4 + 1] = WHITE_TILE_COLOR_G;
+						boardColors[vertexIndex * 4 + 2] = WHITE_TILE_COLOR_B;
+						boardColors[vertexIndex * 4 + 3] = 1.f;
+					}else{
+						boardColors[vertexIndex * 4 + 0] = BLACK_TILE_COLOR_R;
+						boardColors[vertexIndex * 4 + 1] = BLACK_TILE_COLOR_G;
+						boardColors[vertexIndex * 4 + 2] = BLACK_TILE_COLOR_B;
+						boardColors[vertexIndex * 4 + 3] = 1.f;
+					}
+				}else{
+					if(j % 2 != 0){
+						boardColors[vertexIndex * 4 + 0] = WHITE_TILE_COLOR_R;
+						boardColors[vertexIndex * 4 + 1] = WHITE_TILE_COLOR_G;
+						boardColors[vertexIndex * 4 + 2] = WHITE_TILE_COLOR_B;
+						boardColors[vertexIndex * 4 + 3] = 1.f;
+					}else{
+						boardColors[vertexIndex * 4 + 0] = BLACK_TILE_COLOR_R;
+						boardColors[vertexIndex * 4 + 1] = BLACK_TILE_COLOR_G;
+						boardColors[vertexIndex * 4 + 2] = BLACK_TILE_COLOR_B;
+						boardColors[vertexIndex * 4 + 3] = 1.f;
+					}
+				}
+				++vertexIndex;
+			}
+		}
+	}
+}
 
 void error_callback(int error, const char* description)
 {
@@ -62,7 +112,8 @@ void initOpenGLProgram(GLFWwindow* window)
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window,windowResizeCallback);
 	glfwSetKeyCallback(window,keyCallback);
-	sp = new ShaderProgram("shader/v_simplest.glsl",NULL,"shader/f_simplest.glsl");
+	sp = new ShaderProgram("shader/v_colored.glsl",NULL,"shader/f_colored.glsl");
+	genereteBoard();
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
@@ -74,13 +125,13 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4 V=glm::lookAt(
-        glm::vec3(0.0f,0.0f,-5.0f),
+        glm::vec3(0.0f,5.0f,-12.5f),
         glm::vec3(0.0f,0.0f,0.0f),
         glm::vec3(0.0f,1.0f,0.0f));
-    glm::mat4 P=glm::perspective(50.0f*PI/180.0f, 1.0f, 1.0f, 50.0f);
+    glm::mat4 P=glm::perspective(50.0f*PI/180.0f, aspectRatio, 1.0f, 50.0f);
     glm::mat4 M=glm::mat4(1.0f);
-	M=glm::rotate(M,angle_y,glm::vec3(1.0f,0.0f,0.0f)); //Compute model matrix
-	M=glm::rotate(M,angle_x,glm::vec3(0.0f,1.0f,0.0f)); //Compute model matrix
+	M=glm::rotate(M,angle_y,glm::vec3(1.0f,0.0f,0.0f));
+	M=glm::rotate(M,angle_x,glm::vec3(0.0f,1.0f,0.0f));
 	glm::vec4 lp=glm::vec4(0.0f, 0.0f, -6.0f, -1.0f);
     sp->use();
 
@@ -93,11 +144,11 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glEnableVertexAttribArray(sp->a("color"));
 	glEnableVertexAttribArray(sp->a("normal"));
 
-    glVertexAttribPointer(sp->a("vertex"),4,GL_FLOAT,false,0,myTeapotVertices);
-	glVertexAttribPointer(sp->a("color"),4,GL_FLOAT,false,0,myTeapotColors);
-	glVertexAttribPointer(sp->a("normal"),4,GL_FLOAT,false,0,myTeapotVertexNormals);
+    glVertexAttribPointer(sp->a("vertex"),4,GL_FLOAT,false,0,boardVertices);
+	glVertexAttribPointer(sp->a("color"),4,GL_FLOAT,false,0,boardColors);
+	glVertexAttribPointer(sp->a("normal"),4,GL_FLOAT,false,0,boardNormals);
 
-    glDrawArrays(GL_TRIANGLES,0,myTeapotVertexCount);
+    glDrawArrays(GL_TRIANGLES,0,BOARD_VERTEX_COUNT);
 
     glDisableVertexAttribArray(sp->a("vertex"));
 	glDisableVertexAttribArray(sp->a("color"));
