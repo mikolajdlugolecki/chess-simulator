@@ -134,21 +134,32 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	M=glm::rotate(M,angle_x,glm::vec3(0.0f,1.0f,0.0f));
 	glm::vec4 lp=glm::vec4(0.0f, 0.0f, -6.0f, -1.0f);
     sp->use();
-
-    glUniformMatrix4fv(sp->u("P"),1,false,glm::value_ptr(P));
+	glUniformMatrix4fv(sp->u("P"),1,false,glm::value_ptr(P));
     glUniformMatrix4fv(sp->u("V"),1,false,glm::value_ptr(V));
     glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M));
 	glUniformMatrix4fv(sp->u("lp"),1,false,glm::value_ptr(lp));
-	int iadiaf = 0;
-    glEnableVertexAttribArray(sp->a("vertex"));
+	
+	glEnableVertexAttribArray(sp->a("vertex"));
 	glEnableVertexAttribArray(sp->a("color"));
 	glEnableVertexAttribArray(sp->a("normal"));
 
     glVertexAttribPointer(sp->a("vertex"),4,GL_FLOAT,false,0,boardVertices);
 	glVertexAttribPointer(sp->a("color"),4,GL_FLOAT,false,0,boardColors);
 	glVertexAttribPointer(sp->a("normal"),4,GL_FLOAT,false,0,boardNormals);
-
+	
+	glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M));
+	
     glDrawArrays(GL_TRIANGLES,0,BOARD_VERTEX_COUNT);
+	
+	glVertexAttribPointer(sp->a("vertex"),4,GL_FLOAT,false,0,boardVertices);
+	glVertexAttribPointer(sp->a("color"),4,GL_FLOAT,false,0,boardColors);
+	glVertexAttribPointer(sp->a("normal"),4,GL_FLOAT,false,0,boardNormals);
+	
+	glm::mat4 M2 = glm::translate(M,glm::vec3(0.0f,-1.0f,0.0f));
+	glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M2));
+	
+	glDrawArrays(GL_TRIANGLES,0,BOARD_VERTEX_COUNT);
+	
 
     glDisableVertexAttribArray(sp->a("vertex"));
 	glDisableVertexAttribArray(sp->a("color"));
