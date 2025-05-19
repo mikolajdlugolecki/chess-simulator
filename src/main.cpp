@@ -17,14 +17,19 @@ float speed_x = 0;
 float speed_y = 0;
 float aspectRatio = 1;
 ShaderProgram *sp;
+GLuint whiteTileTexture;
+GLuint blackTileTexture;
 
 void genereteBoard(void){
 	int vertexIndex = 0;
+	bool white = true;
 	for(int i = 0; i < BOARD_SIZE; i++){
-		for (int j = 0; j < BOARD_SIZE; j++) {
+		white = !white;
+		for (int j = 0; j < BOARD_SIZE; j++){
 			float offsetX = (j - BOARD_SIZE / 2);
 			float offsetZ = (i - BOARD_SIZE / 2);
-			for(int k = 0; k < TILE_VERTEX_COUNT; k++) {
+			white = !white;
+			for(int k = 0; k < TILE_VERTEX_COUNT; k++){
 				int base = k * 4;
 				float px = tileVertices[base + 0] + offsetX;
 				float py = tileVertices[base + 1];
@@ -38,35 +43,39 @@ void genereteBoard(void){
 				boardNormals[vertexIndex * 4 + 1] = 1.0f;
 				boardNormals[vertexIndex * 4 + 2] = 0.0f;
 				boardNormals[vertexIndex * 4 + 3] = 0.0f;
-				if(i % 2 == 0){
-					if(j % 2 == 0){
-						boardColors[vertexIndex * 4 + 0] = WHITE_TILE_COLOR_R;
-						boardColors[vertexIndex * 4 + 1] = WHITE_TILE_COLOR_G;
-						boardColors[vertexIndex * 4 + 2] = WHITE_TILE_COLOR_B;
-						boardColors[vertexIndex * 4 + 3] = 1.f;
-					}else{
-						boardColors[vertexIndex * 4 + 0] = BLACK_TILE_COLOR_R;
-						boardColors[vertexIndex * 4 + 1] = BLACK_TILE_COLOR_G;
-						boardColors[vertexIndex * 4 + 2] = BLACK_TILE_COLOR_B;
-						boardColors[vertexIndex * 4 + 3] = 1.f;
-					}
+				boardTexCoords[vertexIndex * 2 + 0] = tileTexCoords[k * 2 + 0];
+                boardTexCoords[vertexIndex * 2 + 1] = tileTexCoords[k * 2 + 1];
+				if(white){
+					boardColors[vertexIndex * 4 + 0] = WHITE_TILE_COLOR_R;
+					boardColors[vertexIndex * 4 + 1] = WHITE_TILE_COLOR_G;
+					boardColors[vertexIndex * 4 + 2] = WHITE_TILE_COLOR_B;
+					boardColors[vertexIndex * 4 + 3] = 1.f;
+					boardTextures[vertexIndex] = 1.f; 
 				}else{
-					if(j % 2 != 0){
-						boardColors[vertexIndex * 4 + 0] = WHITE_TILE_COLOR_R;
-						boardColors[vertexIndex * 4 + 1] = WHITE_TILE_COLOR_G;
-						boardColors[vertexIndex * 4 + 2] = WHITE_TILE_COLOR_B;
-						boardColors[vertexIndex * 4 + 3] = 1.f;
-					}else{
-						boardColors[vertexIndex * 4 + 0] = BLACK_TILE_COLOR_R;
-						boardColors[vertexIndex * 4 + 1] = BLACK_TILE_COLOR_G;
-						boardColors[vertexIndex * 4 + 2] = BLACK_TILE_COLOR_B;
-						boardColors[vertexIndex * 4 + 3] = 1.f;
-					}
+					boardColors[vertexIndex * 4 + 0] = BLACK_TILE_COLOR_R;
+					boardColors[vertexIndex * 4 + 1] = BLACK_TILE_COLOR_G;
+					boardColors[vertexIndex * 4 + 2] = BLACK_TILE_COLOR_B;
+					boardColors[vertexIndex * 4 + 3] = 1.f;
+					boardTextures[vertexIndex] = 0.f; 
 				}
-				++vertexIndex;
+				vertexIndex++;
 			}
 		}
 	}
+}
+
+GLuint readTexture(const char* filename){
+	GLuint tex;
+	glActiveTexture(GL_TEXTURE0);
+	std::vector<unsigned char> image;
+	unsigned width, height;
+	unsigned error = lodepng::decode(image, width, height, filename);
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*)image.data());
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	return tex;
 }
 
 void error_callback(int error, const char* description)
@@ -112,13 +121,17 @@ void initOpenGLProgram(GLFWwindow* window)
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window,windowResizeCallback);
 	glfwSetKeyCallback(window,keyCallback);
-	sp = new ShaderProgram("shader/v_colored.glsl",NULL,"shader/f_colored.glsl");
+	sp = new ShaderProgram("shader/v_textured.glsl",NULL,"shader/f_textured.glsl");
+	whiteTileTexture = readTexture("texture/white-tile.png");
+	blackTileTexture = readTexture("texture/black-tile.png");
 	genereteBoard();
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
 {
 	delete sp;
+	glDeleteTextures(1, &whiteTileTexture);
+	glDeleteTextures(1, &blackTileTexture);
 }
 
 void drawScene(GLFWwindow* window, float angle_x, float angle_y)
@@ -137,33 +150,40 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glUniformMatrix4fv(sp->u("P"),1,false,glm::value_ptr(P));
     glUniformMatrix4fv(sp->u("V"),1,false,glm::value_ptr(V));
     glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M));
-	glUniformMatrix4fv(sp->u("lp"),1,false,glm::value_ptr(lp));
-	
+
 	glEnableVertexAttribArray(sp->a("vertex"));
 	glEnableVertexAttribArray(sp->a("color"));
 	glEnableVertexAttribArray(sp->a("normal"));
+	glEnableVertexAttribArray(sp->a("texCoord"));
+	glEnableVertexAttribArray(sp->a("texture"));
+	
+    glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, false, 0, boardVertices);
+	glVertexAttribPointer(sp->a("color"), 4, GL_FLOAT, false, 0, boardColors);
+	glVertexAttribPointer(sp->a("normal"), 4, GL_FLOAT, false, 0, boardNormals);
+	glVertexAttribPointer(sp->a("texCoord"), 2, GL_FLOAT, false, 0, boardTexCoords);
+	glVertexAttribPointer(sp->a("texture"), 1, GL_FLOAT, false, 0, boardTextures);
 
-    glVertexAttribPointer(sp->a("vertex"),4,GL_FLOAT,false,0,boardVertices);
-	glVertexAttribPointer(sp->a("color"),4,GL_FLOAT,false,0,boardColors);
-	glVertexAttribPointer(sp->a("normal"),4,GL_FLOAT,false,0,boardNormals);
+	glActiveTexture(GL_TEXTURE0); 
+	glBindTexture(GL_TEXTURE_2D, blackTileTexture);
+	glActiveTexture(GL_TEXTURE1); 
+	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
+	glUniform1i(sp->u("blackTile"), 0);
+	glUniform1i(sp->u("whiteTile"), 1);
 	
 	glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M));
 	
     glDrawArrays(GL_TRIANGLES,0,BOARD_VERTEX_COUNT);
-	
-	glVertexAttribPointer(sp->a("vertex"),4,GL_FLOAT,false,0,boardVertices);
-	glVertexAttribPointer(sp->a("color"),4,GL_FLOAT,false,0,boardColors);
-	glVertexAttribPointer(sp->a("normal"),4,GL_FLOAT,false,0,boardNormals);
 	
 	glm::mat4 M2 = glm::translate(M,glm::vec3(0.0f,-1.0f,0.0f));
 	glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M2));
 	
 	glDrawArrays(GL_TRIANGLES,0,BOARD_VERTEX_COUNT);
 	
-
     glDisableVertexAttribArray(sp->a("vertex"));
 	glDisableVertexAttribArray(sp->a("color"));
 	glDisableVertexAttribArray(sp->a("normal"));
+	glDisableVertexAttribArray(sp->a("texCoord"));
+	glDisableVertexAttribArray(sp->a("texture"));
 
     glfwSwapBuffers(window);
 }

@@ -17,5 +17,7 @@
 float boardVertices[BOARD_VERTEX_COUNT * 4];
 float boardNormals[BOARD_VERTEX_COUNT * 4];
 float boardColors[BOARD_VERTEX_COUNT * 4];
+float boardTexCoords[BOARD_VERTEX_COUNT * 2];
+float boardTextures[BOARD_VERTEX_COUNT];
 
 #endif
