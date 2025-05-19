@@ -139,7 +139,7 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
     glUniformMatrix4fv(sp->u("V"),1,false,glm::value_ptr(V));
     glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M));
 	glUniformMatrix4fv(sp->u("lp"),1,false,glm::value_ptr(lp));
-
+	int iadiaf = 0;
     glEnableVertexAttribArray(sp->a("vertex"));
 	glEnableVertexAttribArray(sp->a("color"));
 	glEnableVertexAttribArray(sp->a("normal"));
