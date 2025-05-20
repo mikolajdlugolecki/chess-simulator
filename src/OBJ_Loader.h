@@ -18,7 +18,7 @@
 #include <math.h>
 
 // Print progress to console while loading (large models)
-#define OBJL_CONSOLE_OUTPUT
+// #define OBJL_CONSOLE_OUTPUT
 
 // Namespace: OBJL
 //
@@ -422,6 +422,12 @@ namespace objl
 			LoadedMeshes.clear();
 		}
 
+		float safe_stof(const std::string& s) {
+			char* end;
+			double val = std::strtod(s.c_str(), &end);
+			return static_cast<float>(val);
+		}
+
 		// Load a file into the loader
 		//
 		// If file is loaded return true
@@ -542,9 +548,9 @@ namespace objl
 					Vector3 vpos;
 					algorithm::split(algorithm::tail(curline), spos, " ");
 
-					vpos.X = std::stof(spos[0]);
-					vpos.Y = std::stof(spos[1]);
-					vpos.Z = std::stof(spos[2]);
+					vpos.X = safe_stof(spos[0]);
+					vpos.Y = safe_stof(spos[1]);
+					vpos.Z = safe_stof(spos[2]);
 
 					Positions.push_back(vpos);
 				}
@@ -555,8 +561,8 @@ namespace objl
 					Vector2 vtex;
 					algorithm::split(algorithm::tail(curline), stex, " ");
 
-					vtex.X = std::stof(stex[0]);
-					vtex.Y = std::stof(stex[1]);
+					vtex.X = safe_stof(stex[0]);
+					vtex.Y = safe_stof(stex[1]);
 
 					TCoords.push_back(vtex);
 				}
@@ -567,9 +573,9 @@ namespace objl
 					Vector3 vnor;
 					algorithm::split(algorithm::tail(curline), snor, " ");
 
-					vnor.X = std::stof(snor[0]);
-					vnor.Y = std::stof(snor[1]);
-					vnor.Z = std::stof(snor[2]);
+					vnor.X = safe_stof(snor[0]);
+					vnor.Y = safe_stof(snor[1]);
+					vnor.Z = safe_stof(snor[2]);
 
 					Normals.push_back(vnor);
 				}
