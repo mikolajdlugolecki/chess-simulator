@@ -15,13 +15,20 @@
 #include "Board.h"
 #include "Figures.h"
 
+#define ONE_TILE 66.6f
+
 float speedX = 0;
 float speedY = 0;
 float aspectRatio = 1;
 ShaderProgram *shaderProgram;
 GLuint whiteTileTexture;
 GLuint blackTileTexture;
+GLuint bishopVAO, bishopVBO[3];
+GLuint kingVAO, kingVBO[3];
+GLuint knightVAO, knightVBO[3];
 GLuint pawnVAO, pawnVBO[3];
+GLuint queenVAO, queenVBO[3];
+GLuint rookVAO, rookVBO[3];
 const char* shaderVertexCoordinatesName = "vertexCoordinates";
 const char* shaderVertexColorsName = "vertexColors";
 const char* shaderVertexNormalsName = "vertexNormals";
@@ -148,6 +155,47 @@ void windowResizeCallback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void loadFigures()
+{
+	loadFigure("model/Bishop.obj", bishopVertexCount, &bishopVertices, &bishopNormals, &bishopTexCoords);
+	loadFigure("model/King.obj", kingVertexCount, &kingVertices, &kingNormals, &kingTexCoords);
+	loadFigure("model/Knight.obj", knightVertexCount, &knightVertices, &knightNormals, &knightTexCoords);
+	loadFigure("model/Pawn.obj", pawnVertexCount, &pawnVertices, &pawnNormals, &pawnTexCoords);
+	loadFigure("model/Queen.obj", queenVertexCount, &queenVertices, &queenNormals, &queenTexCoords);
+	loadFigure("model/Rook.obj", rookVertexCount, &rookVertices, &rookNormals, &rookTexCoords);
+}
+
+void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords)
+{
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(3, VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+	glBufferData(GL_ARRAY_BUFFER, vertices->size() * sizeof(float), vertices->data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(shaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+	glBufferData(GL_ARRAY_BUFFER, normals->size() * sizeof(float), normals->data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(shaderProgram->a(shaderVertexNormalsName), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexNormalsName));
+	glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+	glBufferData(GL_ARRAY_BUFFER, texCoords->size() * sizeof(float), texCoords->data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(shaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexTexturingCoordinatesName));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
+void prepareFigures()
+{
+	prepareFigure(bishopVAO, bishopVBO, &bishopVertices, &bishopNormals, &bishopTexCoords);
+	prepareFigure(kingVAO, kingVBO, &kingVertices, &kingNormals, &kingTexCoords);
+	prepareFigure(knightVAO, knightVBO, &knightVertices, &knightNormals, &knightTexCoords);
+	prepareFigure(pawnVAO, pawnVBO, &pawnVertices, &pawnNormals, &pawnTexCoords);
+	prepareFigure(queenVAO, queenVBO, &queenVertices, &queenNormals, &queenTexCoords);
+	prepareFigure(rookVAO, rookVBO, &rookVertices, &rookNormals, &rookTexCoords);
+}
+
 void initOpenGLProgram(GLFWwindow* window)
 {
 	glClearColor(0, 0, 0, 1);
@@ -158,29 +206,8 @@ void initOpenGLProgram(GLFWwindow* window)
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
 	genereteBoard();
-	loadFigure("model/Bishop.obj", bishopVertexCount, &bishopVertices, &bishopNormals, &bishopTexCoords);
-	//loadFigure("model/King.obj", kingVertexCount, &kingVertices, &kingNormals, &kingTexCoords);
-	loadFigure("model/Knight.obj", knightVertexCount, &knightVertices, &knightNormals, &knightTexCoords);
-	loadFigure("model/Pawn.obj", pawnVertexCount, &pawnVertices, &pawnNormals, &pawnTexCoords);
-	loadFigure("model/Queen.obj", queenVertexCount, &queenVertices, &queenNormals, &queenTexCoords);
-	//loadFigure("model/Rook.obj", rookVertexCount, &rookVertices, &rookNormals, &rookTexCoords);
-	glGenVertexArrays(1, &pawnVAO);
-	glGenBuffers(3, pawnVBO);
-	glBindVertexArray(pawnVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, pawnVBO[0]);
-	glBufferData(GL_ARRAY_BUFFER, pawnVertices.size() * sizeof(float), pawnVertices.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(shaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glEnableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
-	glBindBuffer(GL_ARRAY_BUFFER, pawnVBO[1]);
-	glBufferData(GL_ARRAY_BUFFER, pawnNormals.size() * sizeof(float), pawnNormals.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(shaderProgram->a(shaderVertexNormalsName), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glEnableVertexAttribArray(shaderProgram->a(shaderVertexNormalsName));
-	glBindBuffer(GL_ARRAY_BUFFER, pawnVBO[2]);
-	glBufferData(GL_ARRAY_BUFFER, pawnTexCoords.size() * sizeof(float), pawnTexCoords.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(shaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
-	glEnableVertexAttribArray(shaderProgram->a(shaderVertexTexturingCoordinatesName));
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	loadFigures();
+	prepareFigures();
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
@@ -188,8 +215,66 @@ void freeOpenGLProgram(GLFWwindow* window)
 	delete shaderProgram;
 	glDeleteTextures(1, &whiteTileTexture);
 	glDeleteTextures(1, &blackTileTexture);
+	glDeleteVertexArrays(1, &bishopVAO);
+	glDeleteBuffers(3, bishopVBO);
+	glDeleteVertexArrays(1, &kingVAO);
+	glDeleteBuffers(3, kingVBO);
+	glDeleteVertexArrays(1, &knightVAO);
+	glDeleteBuffers(3, knightVBO);
 	glDeleteVertexArrays(1, &pawnVAO);
 	glDeleteBuffers(3, pawnVBO);
+	glDeleteVertexArrays(1, &queenVAO);
+	glDeleteBuffers(3, queenVBO);
+	glDeleteVertexArrays(1, &rookVAO);
+	glDeleteBuffers(3, rookVBO);
+}
+
+void drawBishop(glm::mat4 modelMatrix)
+{
+	glBindVertexArray(bishopVAO);
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	glDrawArrays(GL_TRIANGLES, 0, bishopVertexCount);
+	glBindVertexArray(0);
+}
+
+void drawKing(glm::mat4 modelMatrix)
+{
+	glBindVertexArray(kingVAO);
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	glDrawArrays(GL_TRIANGLES, 0, kingVertexCount);
+	glBindVertexArray(0);
+}
+
+void drawKnight(glm::mat4 modelMatrix)
+{
+	glBindVertexArray(knightVAO);
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	glDrawArrays(GL_TRIANGLES, 0, knightVertexCount);
+	glBindVertexArray(0);
+}
+
+void drawPawn(glm::mat4 modelMatrix)
+{
+	glBindVertexArray(pawnVAO);
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+	glBindVertexArray(0);
+}
+
+void drawQueen(glm::mat4 modelMatrix)
+{
+	glBindVertexArray(queenVAO);
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	glDrawArrays(GL_TRIANGLES, 0, queenVertexCount);
+	glBindVertexArray(0);
+}
+
+void drawRook(glm::mat4 modelMatrix)
+{
+	glBindVertexArray(rookVAO);
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	glDrawArrays(GL_TRIANGLES, 0, rookVertexCount);
+	glBindVertexArray(0);
 }
 
 void drawScene(GLFWwindow* window, float angle_x, float angle_y)
@@ -226,6 +311,8 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glUniform1i(shaderProgram->u("whiteTile"), 1);
 	
 	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+
+	glUniform1i(shaderProgram->u("useTexture"), 1);
 	
     glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 	
@@ -234,85 +321,84 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	
 	glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 
-	glm::mat4 blackPawn1 = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
-	blackPawn1 = glm::scale(blackPawn1, glm::vec3(0.015f, 0.015f, 0.015f));
-	glm::mat4 whitePawn1 = glm::translate(blackPawn1, glm::vec3(-4 * 66.6f, -2 * 66.6f, 0.f));
-	blackPawn1 = glm::translate(blackPawn1, glm::vec3(-4 * 66.6f, 3 * 66.6f, 0.f));
-
-	glBindVertexArray(pawnVAO);
-
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn1));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 blackPawn2 = glm::translate(blackPawn1, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn2));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 blackPawn3 = glm::translate(blackPawn2, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn3));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 blackPawn4 = glm::translate(blackPawn3, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn4));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 blackPawn5 = glm::translate(blackPawn4, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn5));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 blackPawn6 = glm::translate(blackPawn5, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn6));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 blackPawn7 = glm::translate(blackPawn6, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn7));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 blackPawn8 = glm::translate(blackPawn7, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn8));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
+	glm::mat4 spawn = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
+	spawn = glm::scale(spawn, glm::vec3(0.015f, 0.015f, 0.015f));
+	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, -3 * ONE_TILE, 0.f));
 	
-	
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false,glm::value_ptr(whitePawn1));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+	glm::mat4 blackRook1 = glm::rotate(glm::translate(spawn, glm::vec3(0 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackKnight1 = glm::rotate(glm::translate(spawn, glm::vec3(-ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackBishop1 = glm::rotate(glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackQueen = glm::rotate(glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackKing = glm::rotate(glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackBishop2 = glm::rotate(glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackKnight2 = glm::rotate(glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackRook2 = glm::rotate(glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn1 = glm::rotate(glm::translate(spawn, glm::vec3(0 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn2 = glm::rotate(glm::translate(spawn, glm::vec3(-1 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn3 = glm::rotate(glm::translate(spawn, glm::vec3(-2 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn4 = glm::rotate(glm::translate(spawn, glm::vec3(-3 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn5 = glm::rotate(glm::translate(spawn, glm::vec3(-4 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn6 = glm::rotate(glm::translate(spawn, glm::vec3(-5 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn7 = glm::rotate(glm::translate(spawn, glm::vec3(-6 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	glm::mat4 blackPawn8 = glm::rotate(glm::translate(spawn, glm::vec3(-7 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 
-	glm::mat4 whitePawn2 = glm::translate(whitePawn1, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn2));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+	drawRook(blackRook1);
+	drawKnight(blackKnight1);
+	drawBishop(blackBishop1);
+	drawQueen(blackQueen);
+	drawKing(blackKing);
+	drawBishop(blackBishop2);
+	drawKnight(blackKnight2);
+	drawRook(blackRook2);
+	drawPawn(blackPawn1);
+	drawPawn(blackPawn2);
+	drawPawn(blackPawn3);
+	drawPawn(blackPawn4);
+	drawPawn(blackPawn5);
+	drawPawn(blackPawn6);
+	drawPawn(blackPawn7);
+	drawPawn(blackPawn8);
 
-	glm::mat4 whitePawn3 = glm::translate(whitePawn2, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn3));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+	glm::mat4 whiteRook1 = glm::translate(spawn, glm::vec3(0 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whiteKnight1 = glm::translate(spawn, glm::vec3(-1 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whiteBishop1 = glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whiteQueen = glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whiteKing = glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whiteBishop2 = glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whiteKnight2 = glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whiteRook2 = glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 7 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn1 = glm::translate(spawn, glm::vec3(0 * ONE_TILE, 6 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn2 = glm::translate(spawn, glm::vec3(-1 * ONE_TILE, 6 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn3 = glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 6 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn4 = glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 6 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn5 = glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 6 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn6 = glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 6 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn7 = glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 6 * ONE_TILE, 0.f));
+	glm::mat4 whitePawn8 = glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 6 * ONE_TILE, 0.f));
 
-	glm::mat4 whitePawn4 = glm::translate(whitePawn3, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn4));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 whitePawn5 = glm::translate(whitePawn4, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn5));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 whitePawn6 = glm::translate(whitePawn5, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn6));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 whitePawn7 = glm::translate(whitePawn6, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn7));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glm::mat4 whitePawn8 = glm::translate(whitePawn7, glm::vec3(66.6f, 0.f, 0.f));
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn8));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-
-	glBindVertexArray(0);
+	drawRook(whiteRook1);
+	drawKnight(whiteKnight1);
+	drawBishop(whiteBishop1);
+	drawQueen(whiteQueen);
+	drawKing(whiteKing);
+	drawBishop(whiteBishop2);
+	drawKnight(whiteKnight2);
+	drawRook(whiteRook2);
+	drawPawn(whitePawn1);
+	drawPawn(whitePawn2);
+	drawPawn(whitePawn3);
+	drawPawn(whitePawn4);
+	drawPawn(whitePawn5);
+	drawPawn(whitePawn6);
+	drawPawn(whitePawn7);
+	drawPawn(whitePawn8);
 
     glDisableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
 	glDisableVertexAttribArray(shaderProgram->a(shaderVertexColorsName));
 	glDisableVertexAttribArray(shaderProgram->a(shaderVertexNormalsName));
 	glDisableVertexAttribArray(shaderProgram->a(shaderVertexTexturingCoordinatesName));
 	glDisableVertexAttribArray(shaderProgram->a("textureIndexIn"));
-
+	
     glfwSwapBuffers(window);
 }
 

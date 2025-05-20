@@ -22,7 +22,6 @@ int pawnVertexCount;
 std::vector<float> pawnVertices;
 std::vector<float> pawnNormals;
 std::vector<float> pawnTexCoords;
-std::vector<float> pawnIndices;
 
 int queenVertexCount;
 std::vector<float> queenVertices;
