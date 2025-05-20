@@ -15,13 +15,17 @@
 #include "Board.h"
 #include "Figures.h"
 
-float speed_x = 0;
-float speed_y = 0;
+float speedX = 0;
+float speedY = 0;
 float aspectRatio = 1;
-ShaderProgram *sp;
+ShaderProgram *shaderProgram;
 GLuint whiteTileTexture;
 GLuint blackTileTexture;
 GLuint pawnVAO, pawnVBO[3];
+const char* shaderVertexCoordinatesName = "vertexCoordinates";
+const char* shaderVertexColorsName = "vertexColors";
+const char* shaderVertexNormalsName = "vertexNormals";
+const char* shaderVertexTexturingCoordinatesName = "vertexTexturingCoordinates";
 
 void genereteBoard(void)
 {
@@ -68,28 +72,28 @@ void genereteBoard(void)
 	}
 }
 
-void loadFigure(const char* fileName)
+void loadFigure(const char* fileName, int &vertexCount, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords)
 {
 	objl::Loader loader;
 	bool loadout = loader.LoadFile(fileName);
 	if(!loadout)
 		return;
 	for(int i=0; i<loader.LoadedMeshes.size(); i++){
-		objl::Mesh curMesh = loader.LoadedMeshes[i];
-		for(int j=0; j<curMesh.Vertices.size(); j++){
-			pawnVertices.push_back(curMesh.Vertices[j].Position.X);
-			pawnVertices.push_back(curMesh.Vertices[j].Position.Y);
-			pawnVertices.push_back(curMesh.Vertices[j].Position.Z);
-			pawnVertices.push_back(1.f);
-			pawnNormals.push_back(curMesh.Vertices[j].Normal.X);
-			pawnNormals.push_back(curMesh.Vertices[j].Normal.Y);
-			pawnNormals.push_back(curMesh.Vertices[j].Normal.Z);
-			pawnNormals.push_back(0.f);
-			pawnTexCoords.push_back(curMesh.Vertices[j].TextureCoordinate.X);
-			pawnTexCoords.push_back(curMesh.Vertices[j].TextureCoordinate.Y);
+		objl::Mesh currentMesh = loader.LoadedMeshes[i];
+		for(int j=0; j<currentMesh.Vertices.size(); j++){
+			vertices->push_back(currentMesh.Vertices[j].Position.X);
+			vertices->push_back(currentMesh.Vertices[j].Position.Y);
+			vertices->push_back(currentMesh.Vertices[j].Position.Z);
+			vertices->push_back(1.f);
+			normals->push_back(currentMesh.Vertices[j].Normal.X);
+			normals->push_back(currentMesh.Vertices[j].Normal.Y);
+			normals->push_back(currentMesh.Vertices[j].Normal.Z);
+			normals->push_back(0.f);
+			texCoords->push_back(currentMesh.Vertices[j].TextureCoordinate.X);
+			texCoords->push_back(currentMesh.Vertices[j].TextureCoordinate.Y);
 		}
 	}
-	pawnVertexCount = pawnVertices.size() / 4;
+	vertexCount = vertices->size() / 4;
 }
 
 GLuint readTexture(const char* filename)
@@ -116,23 +120,23 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 {
     if(action == GLFW_PRESS){
         if(key == GLFW_KEY_LEFT) 
-			speed_x = -PI / 2;
+			speedX = -PI / 2;
         if(key == GLFW_KEY_RIGHT)
-			speed_x = PI / 2;
+			speedX = PI / 2;
         if(key == GLFW_KEY_UP)
-			speed_y = PI / 2;
+			speedY = PI / 2;
         if(key == GLFW_KEY_DOWN)
-			speed_y = -PI / 2;
+			speedY = -PI / 2;
     }
     if(action == GLFW_RELEASE){
         if(key == GLFW_KEY_LEFT)
-			speed_x = 0;
+			speedX = 0;
         if(key == GLFW_KEY_RIGHT)
-			speed_x = 0;
+			speedX = 0;
         if(key == GLFW_KEY_UP)
-			speed_y = 0;
+			speedY = 0;
         if(key == GLFW_KEY_DOWN)
-			speed_y = 0;
+			speedY = 0;
     }
 }
 
@@ -150,33 +154,38 @@ void initOpenGLProgram(GLFWwindow* window)
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	glfwSetKeyCallback(window, keyCallback);
-	sp = new ShaderProgram("shader/v_textured.glsl", NULL, "shader/f_textured.glsl");
+	shaderProgram = new ShaderProgram("shader/v_chess.glsl", NULL, "shader/f_chess.glsl");
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
 	genereteBoard();
-	loadFigure("model/Pawn.obj");
+	loadFigure("model/Bishop.obj", bishopVertexCount, &bishopVertices, &bishopNormals, &bishopTexCoords);
+	//loadFigure("model/King.obj", kingVertexCount, &kingVertices, &kingNormals, &kingTexCoords);
+	loadFigure("model/Knight.obj", knightVertexCount, &knightVertices, &knightNormals, &knightTexCoords);
+	loadFigure("model/Pawn.obj", pawnVertexCount, &pawnVertices, &pawnNormals, &pawnTexCoords);
+	loadFigure("model/Queen.obj", queenVertexCount, &queenVertices, &queenNormals, &queenTexCoords);
+	//loadFigure("model/Rook.obj", rookVertexCount, &rookVertices, &rookNormals, &rookTexCoords);
 	glGenVertexArrays(1, &pawnVAO);
 	glGenBuffers(3, pawnVBO);
 	glBindVertexArray(pawnVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, pawnVBO[0]);
 	glBufferData(GL_ARRAY_BUFFER, pawnVertices.size() * sizeof(float), pawnVertices.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glEnableVertexAttribArray(sp->a("vertex"));
+	glVertexAttribPointer(shaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
 	glBindBuffer(GL_ARRAY_BUFFER, pawnVBO[1]);
 	glBufferData(GL_ARRAY_BUFFER, pawnNormals.size() * sizeof(float), pawnNormals.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(sp->a("normal"), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glEnableVertexAttribArray(sp->a("normal"));
+	glVertexAttribPointer(shaderProgram->a(shaderVertexNormalsName), 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexNormalsName));
 	glBindBuffer(GL_ARRAY_BUFFER, pawnVBO[2]);
 	glBufferData(GL_ARRAY_BUFFER, pawnTexCoords.size() * sizeof(float), pawnTexCoords.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(sp->a("texCoord"), 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glEnableVertexAttribArray(sp->a("texCoord"));
+	glVertexAttribPointer(shaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexTexturingCoordinatesName));
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
 {
-	delete sp;
+	delete shaderProgram;
 	glDeleteTextures(1, &whiteTileTexture);
 	glDeleteTextures(1, &blackTileTexture);
 	glDeleteVertexArrays(1, &pawnVAO);
@@ -186,57 +195,123 @@ void freeOpenGLProgram(GLFWwindow* window)
 void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glm::mat4 V=glm::lookAt(glm::vec3(0.0f,5.0f,-12.5f), glm::vec3(0.0f,0.0f,0.0f), glm::vec3(0.0f,1.0f,0.0f));
-    glm::mat4 P=glm::perspective(50.0f*PI/180.0f, aspectRatio, 1.0f, 50.0f);
-    glm::mat4 M=glm::mat4(1.0f);
-	M=glm::rotate(M,angle_y,glm::vec3(1.0f,0.0f,0.0f));
-	M=glm::rotate(M,angle_x,glm::vec3(0.0f,1.0f,0.0f));
-	glm::vec4 lp=glm::vec4(0.0f, 0.0f, -6.0f, -1.0f);
-    sp->use();
-	glUniformMatrix4fv(sp->u("P"),1,false,glm::value_ptr(P));
-    glUniformMatrix4fv(sp->u("V"),1,false,glm::value_ptr(V));
-    glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M));
+	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.f, 5.f, -12.5f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f));
+    glm::mat4 projectionMatrix = glm::perspective(50.f * PI / 180.f, aspectRatio, 1.f, 50.f);
+    glm::mat4 modelMatrix = glm::mat4(1.f);
+	modelMatrix = glm::rotate(modelMatrix, angle_y, glm::vec3(1.f, 0.f, 0.f));
+	modelMatrix = glm::rotate(modelMatrix, angle_x, glm::vec3(0.f, 1.f, 0.f));
+	glm::vec4 lightPosition = glm::vec4(0.f, 0.f, -6.f, -1.f);
+    shaderProgram->use();
+	glUniformMatrix4fv(shaderProgram->u("P"), 1, false, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(shaderProgram->u("V"), 1, false, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
 
-	glEnableVertexAttribArray(sp->a("vertex"));
-	glEnableVertexAttribArray(sp->a("color"));
-	glEnableVertexAttribArray(sp->a("normal"));
-	glEnableVertexAttribArray(sp->a("texCoord"));
-	glEnableVertexAttribArray(sp->a("texture"));
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexColorsName));
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexNormalsName));
+	glEnableVertexAttribArray(shaderProgram->a(shaderVertexTexturingCoordinatesName));
+	glEnableVertexAttribArray(shaderProgram->a("textureIndexIn"));
 	
-    glVertexAttribPointer(sp->a("vertex"), 4, GL_FLOAT, false, 0, boardVertices);
-	glVertexAttribPointer(sp->a("color"), 4, GL_FLOAT, false, 0, boardColors);
-	glVertexAttribPointer(sp->a("normal"), 4, GL_FLOAT, false, 0, boardNormals);
-	glVertexAttribPointer(sp->a("texCoord"), 2, GL_FLOAT, false, 0, boardTexCoords);
-	glVertexAttribPointer(sp->a("texture"), 1, GL_FLOAT, false, 0, boardTextures);
+    glVertexAttribPointer(shaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, false, 0, boardVertices);
+	glVertexAttribPointer(shaderProgram->a(shaderVertexColorsName), 4, GL_FLOAT, false, 0, boardColors);
+	glVertexAttribPointer(shaderProgram->a(shaderVertexNormalsName), 4, GL_FLOAT, false, 0, boardNormals);
+	glVertexAttribPointer(shaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, false, 0, boardTexCoords);
+	glVertexAttribPointer(shaderProgram->a("textureIndexIn"), 1, GL_FLOAT, false, 0, boardTextures);
 
 	glActiveTexture(GL_TEXTURE0); 
 	glBindTexture(GL_TEXTURE_2D, blackTileTexture);
 	glActiveTexture(GL_TEXTURE1); 
 	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
-	glUniform1i(sp->u("blackTile"), 0);
-	glUniform1i(sp->u("whiteTile"), 1);
+	glUniform1i(shaderProgram->u("blackTile"), 0);
+	glUniform1i(shaderProgram->u("whiteTile"), 1);
 	
-	glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
 	
-    glDrawArrays(GL_TRIANGLES,0,BOARD_VERTEX_COUNT);
+    glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 	
-	glm::mat4 M2 = glm::translate(M,glm::vec3(0.0f,-0.5f,0.0f));
-	glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M2));
+	glm::mat4 M2 = glm::translate(modelMatrix, glm::vec3(0.f, -0.5f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(M2));
 	
-	glDrawArrays(GL_TRIANGLES,0,BOARD_VERTEX_COUNT);
+	glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 
-	glm::mat4 M3 = glm::rotate(M,glm::radians(90.f),glm::vec3(-1.0f,0.0f,0.0f));
-	M3 = glm::scale(M3,glm::vec3(0.015f,0.015f,0.015f));
-	glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M3));
+	glm::mat4 blackPawn1 = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
+	blackPawn1 = glm::scale(blackPawn1, glm::vec3(0.015f, 0.015f, 0.015f));
+	glm::mat4 whitePawn1 = glm::translate(blackPawn1, glm::vec3(-4 * 66.6f, -2 * 66.6f, 0.f));
+	blackPawn1 = glm::translate(blackPawn1, glm::vec3(-4 * 66.6f, 3 * 66.6f, 0.f));
+
 	glBindVertexArray(pawnVAO);
+
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn1));
 	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 blackPawn2 = glm::translate(blackPawn1, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn2));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 blackPawn3 = glm::translate(blackPawn2, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn3));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 blackPawn4 = glm::translate(blackPawn3, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn4));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 blackPawn5 = glm::translate(blackPawn4, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn5));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 blackPawn6 = glm::translate(blackPawn5, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn6));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 blackPawn7 = glm::translate(blackPawn6, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn7));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 blackPawn8 = glm::translate(blackPawn7, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(blackPawn8));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	
+	
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false,glm::value_ptr(whitePawn1));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 whitePawn2 = glm::translate(whitePawn1, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn2));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 whitePawn3 = glm::translate(whitePawn2, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn3));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 whitePawn4 = glm::translate(whitePawn3, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn4));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 whitePawn5 = glm::translate(whitePawn4, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn5));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 whitePawn6 = glm::translate(whitePawn5, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn6));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 whitePawn7 = glm::translate(whitePawn6, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn7));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
+	glm::mat4 whitePawn8 = glm::translate(whitePawn7, glm::vec3(66.6f, 0.f, 0.f));
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(whitePawn8));
+	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
+
 	glBindVertexArray(0);
 
-    glDisableVertexAttribArray(sp->a("vertex"));
-	glDisableVertexAttribArray(sp->a("color"));
-	glDisableVertexAttribArray(sp->a("normal"));
-	glDisableVertexAttribArray(sp->a("texCoord"));
-	glDisableVertexAttribArray(sp->a("texture"));
+    glDisableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
+	glDisableVertexAttribArray(shaderProgram->a(shaderVertexColorsName));
+	glDisableVertexAttribArray(shaderProgram->a(shaderVertexNormalsName));
+	glDisableVertexAttribArray(shaderProgram->a(shaderVertexTexturingCoordinatesName));
+	glDisableVertexAttribArray(shaderProgram->a("textureIndexIn"));
 
     glfwSwapBuffers(window);
 }
@@ -262,15 +337,15 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 	initOpenGLProgram(window);
-	float angle_x=0;
-	float angle_y=0;
+	float angleX = 0;
+	float angleY = 0;
 	glfwSetTime(0);
 	
 	while(!glfwWindowShouldClose(window)){
-        angle_x += speed_x * glfwGetTime();
-		angle_y += speed_y * glfwGetTime();
+        angleX += speedX * glfwGetTime();
+		angleY += speedY * glfwGetTime();
         glfwSetTime(0);
-		drawScene(window, angle_x, angle_y);
+		drawScene(window, angleX, angleY);
 		glfwPollEvents();
 	}
 	freeOpenGLProgram(window);
