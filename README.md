@@ -6,7 +6,7 @@
 * [glew](https://github.com/nigels-com/glew) (v2.2.0 or higher)
 * [glfw](https://github.com/glfw/glfw) (v3.4.0 or higher)
 * [glm](https://github.com/g-truc/glm) (v1.0.1 or higher)
-* [make](https://www.gnu.org/software/make/#documentation) (v4.4.1 or higher)
+* [make](https://www.gnu.org/software/make) (v4.4.1 or higher)
 ## Installation
 ### Linux
 1. **Clone repository:**

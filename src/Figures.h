@@ -2,35 +2,82 @@
 #define FIGURES_H
 
 #include <vector>
+#include <glm/glm.hpp>
+#include <GL/glew.h>
 
-int bishopVertexCount;
-std::vector<float> bishopVertices;
-std::vector<float> bishopNormals;
-std::vector<float> bishopTexCoords;
+class Figure
+{
+public:
+    Figure();
+    Figure(glm::mat4 matrix);
+    glm::mat4 modelMatrix;
+    virtual ~Figure();
+};
 
-int kingVertexCount;
-std::vector<float> kingVertices;
-std::vector<float> kingNormals;
-std::vector<float> kingTexCoords;
+class Bishop : public Figure
+{
+public:
+    static unsigned int vertexCount;
+    static std::vector<float> vertices;
+    static std::vector<float> normals;
+    static std::vector<float> texCoords;
+    static GLuint VAO;
+    static GLuint VBO[3];
+};
 
-int knightVertexCount;
-std::vector<float> knightVertices;
-std::vector<float> knightNormals;
-std::vector<float> knightTexCoords;
+class King : public Figure
+{
+public:
+    static unsigned int vertexCount;
+    static std::vector<float> vertices;
+    static std::vector<float> normals;
+    static std::vector<float> texCoords;
+    static GLuint VAO;
+    static GLuint VBO[3];
+};
 
-int pawnVertexCount;
-std::vector<float> pawnVertices;
-std::vector<float> pawnNormals;
-std::vector<float> pawnTexCoords;
+class Knight : public Figure
+{
+public:
+    static unsigned int vertexCount;
+    static std::vector<float> vertices;
+    static std::vector<float> normals;
+    static std::vector<float> texCoords;
+    static GLuint VAO;
+    static GLuint VBO[3];
+};
 
-int queenVertexCount;
-std::vector<float> queenVertices;
-std::vector<float> queenNormals;
-std::vector<float> queenTexCoords;
+class Pawn : public Figure
+{
+public:
+    static unsigned int vertexCount;
+    static std::vector<float> vertices;
+    static std::vector<float> normals;
+    static std::vector<float> texCoords;
+    static GLuint VAO;
+    static GLuint VBO[3];
+};
 
-int rookVertexCount;
-std::vector<float> rookVertices;
-std::vector<float> rookNormals;
-std::vector<float> rookTexCoords;
+class Queen : public Figure
+{
+public:
+    static unsigned int vertexCount;
+    static std::vector<float> vertices;
+    static std::vector<float> normals;
+    static std::vector<float> texCoords;
+    static GLuint VAO;
+    static GLuint VBO[3];
+};
+
+class Rook : public Figure
+{
+public:
+    static unsigned int vertexCount;
+    static std::vector<float> vertices;
+    static std::vector<float> normals;
+    static std::vector<float> texCoords;
+    static GLuint VAO;
+    static GLuint VBO[3];
+};
 
 #endif
