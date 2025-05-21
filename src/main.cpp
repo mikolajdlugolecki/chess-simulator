@@ -23,16 +23,19 @@ float aspectRatio = 1;
 ShaderProgram *shaderProgram;
 GLuint whiteTileTexture;
 GLuint blackTileTexture;
-GLuint bishopVAO, bishopVBO[3];
-GLuint kingVAO, kingVBO[3];
-GLuint knightVAO, knightVBO[3];
-GLuint pawnVAO, pawnVBO[3];
-GLuint queenVAO, queenVBO[3];
-GLuint rookVAO, rookVBO[3];
 const char* shaderVertexCoordinatesName = "vertexCoordinates";
 const char* shaderVertexColorsName = "vertexColors";
 const char* shaderVertexNormalsName = "vertexNormals";
 const char* shaderVertexTexturingCoordinatesName = "vertexTexturingCoordinates";
+Rook* whiteRook1 = new Rook;
+Knight* whiteKnight1 = new Knight;
+Bishop* whiteBishop1 = new Bishop;
+Queen* whiteQueen = new Queen;
+King* whiteKing = new King;
+Bishop* whiteBishop2 = new Bishop;
+Knight* whiteKnight2 = new Knight;
+Rook* whiteRook2 = new Rook;
+std::vector<Figure*> allFigures;
 
 void genereteBoard(void)
 {
@@ -79,7 +82,7 @@ void genereteBoard(void)
 	}
 }
 
-void loadFigure(const char* fileName, int &vertexCount, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords)
+void loadFigure(const char* fileName, unsigned int &vertexCount, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords)
 {
 	objl::Loader loader;
 	bool loadout = loader.LoadFile(fileName);
@@ -157,12 +160,12 @@ void windowResizeCallback(GLFWwindow* window, int width, int height)
 
 void loadFigures()
 {
-	loadFigure("model/Bishop.obj", bishopVertexCount, &bishopVertices, &bishopNormals, &bishopTexCoords);
-	loadFigure("model/King.obj", kingVertexCount, &kingVertices, &kingNormals, &kingTexCoords);
-	loadFigure("model/Knight.obj", knightVertexCount, &knightVertices, &knightNormals, &knightTexCoords);
-	loadFigure("model/Pawn.obj", pawnVertexCount, &pawnVertices, &pawnNormals, &pawnTexCoords);
-	loadFigure("model/Queen.obj", queenVertexCount, &queenVertices, &queenNormals, &queenTexCoords);
-	loadFigure("model/Rook.obj", rookVertexCount, &rookVertices, &rookNormals, &rookTexCoords);
+	loadFigure("model/Bishop.obj", Bishop::vertexCount, &Bishop::vertices, &Bishop::normals, &Bishop::texCoords);
+	loadFigure("model/King.obj", King::vertexCount, &King::vertices, &King::normals, &King::texCoords);
+	loadFigure("model/Knight.obj", Knight::vertexCount, &Knight::vertices, &Knight::normals, &Knight::texCoords);
+	loadFigure("model/Pawn.obj", Pawn::vertexCount, &Pawn::vertices, &Pawn::normals, &Pawn::texCoords);
+	loadFigure("model/Queen.obj", Queen::vertexCount, &Queen::vertices, &Queen::normals, &Queen::texCoords);
+	loadFigure("model/Rook.obj", Rook::vertexCount, &Rook::vertices, &Rook::normals, &Rook::texCoords);
 }
 
 void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords)
@@ -188,12 +191,12 @@ void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::
 
 void prepareFigures()
 {
-	prepareFigure(bishopVAO, bishopVBO, &bishopVertices, &bishopNormals, &bishopTexCoords);
-	prepareFigure(kingVAO, kingVBO, &kingVertices, &kingNormals, &kingTexCoords);
-	prepareFigure(knightVAO, knightVBO, &knightVertices, &knightNormals, &knightTexCoords);
-	prepareFigure(pawnVAO, pawnVBO, &pawnVertices, &pawnNormals, &pawnTexCoords);
-	prepareFigure(queenVAO, queenVBO, &queenVertices, &queenNormals, &queenTexCoords);
-	prepareFigure(rookVAO, rookVBO, &rookVertices, &rookNormals, &rookTexCoords);
+	prepareFigure(Bishop::VAO, Bishop::VBO, &Bishop::vertices, &Bishop::normals, &Bishop::texCoords);
+	prepareFigure(King::VAO, King::VBO, &King::vertices, &King::normals, &King::texCoords);
+	prepareFigure(Knight::VAO, Knight::VBO, &Knight::vertices, &Knight::normals, &Knight::texCoords);
+	prepareFigure(Pawn::VAO, Pawn::VBO, &Pawn::vertices, &Pawn::normals, &Pawn::texCoords);
+	prepareFigure(Queen::VAO, Queen::VBO, &Queen::vertices, &Queen::normals, &Queen::texCoords);
+	prepareFigure(Rook::VAO, Rook::VBO, &Rook::vertices, &Rook::normals, &Rook::texCoords);
 }
 
 void initOpenGLProgram(GLFWwindow* window)
@@ -208,6 +211,14 @@ void initOpenGLProgram(GLFWwindow* window)
 	genereteBoard();
 	loadFigures();
 	prepareFigures();
+	allFigures.push_back(whiteRook1);
+	allFigures.push_back(whiteKnight1);
+	allFigures.push_back(whiteBishop1);
+	allFigures.push_back(whiteQueen);
+	allFigures.push_back(whiteKing);
+	allFigures.push_back(whiteBishop2);
+	allFigures.push_back(whiteKnight2);
+	allFigures.push_back(whiteRook2);
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
@@ -215,65 +226,51 @@ void freeOpenGLProgram(GLFWwindow* window)
 	delete shaderProgram;
 	glDeleteTextures(1, &whiteTileTexture);
 	glDeleteTextures(1, &blackTileTexture);
-	glDeleteVertexArrays(1, &bishopVAO);
-	glDeleteBuffers(3, bishopVBO);
-	glDeleteVertexArrays(1, &kingVAO);
-	glDeleteBuffers(3, kingVBO);
-	glDeleteVertexArrays(1, &knightVAO);
-	glDeleteBuffers(3, knightVBO);
-	glDeleteVertexArrays(1, &pawnVAO);
-	glDeleteBuffers(3, pawnVBO);
-	glDeleteVertexArrays(1, &queenVAO);
-	glDeleteBuffers(3, queenVBO);
-	glDeleteVertexArrays(1, &rookVAO);
-	glDeleteBuffers(3, rookVBO);
+	glDeleteVertexArrays(1, &Bishop::VAO);
+	glDeleteBuffers(3, Bishop::VBO);
+	glDeleteVertexArrays(1, &King::VAO);
+	glDeleteBuffers(3, King::VBO);
+	glDeleteVertexArrays(1, &Knight::VAO);
+	glDeleteBuffers(3, Knight::VBO);
+	glDeleteVertexArrays(1, &Pawn::VAO);
+	glDeleteBuffers(3, Pawn::VBO);
+	glDeleteVertexArrays(1, &Queen::VAO);
+	glDeleteBuffers(3, Queen::VBO);
+	glDeleteVertexArrays(1, &Rook::VAO);
+	glDeleteBuffers(3, Rook::VBO);
 }
 
-void drawBishop(glm::mat4 modelMatrix)
+void draw(Figure *figure)
 {
-	glBindVertexArray(bishopVAO);
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glDrawArrays(GL_TRIANGLES, 0, bishopVertexCount);
-	glBindVertexArray(0);
-}
-
-void drawKing(glm::mat4 modelMatrix)
-{
-	glBindVertexArray(kingVAO);
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glDrawArrays(GL_TRIANGLES, 0, kingVertexCount);
-	glBindVertexArray(0);
-}
-
-void drawKnight(glm::mat4 modelMatrix)
-{
-	glBindVertexArray(knightVAO);
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glDrawArrays(GL_TRIANGLES, 0, knightVertexCount);
-	glBindVertexArray(0);
-}
-
-void drawPawn(glm::mat4 modelMatrix)
-{
-	glBindVertexArray(pawnVAO);
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glDrawArrays(GL_TRIANGLES, 0, pawnVertexCount);
-	glBindVertexArray(0);
-}
-
-void drawQueen(glm::mat4 modelMatrix)
-{
-	glBindVertexArray(queenVAO);
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glDrawArrays(GL_TRIANGLES, 0, queenVertexCount);
-	glBindVertexArray(0);
-}
-
-void drawRook(glm::mat4 modelMatrix)
-{
-	glBindVertexArray(rookVAO);
-	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glDrawArrays(GL_TRIANGLES, 0, rookVertexCount);
+	GLuint VAO;
+	unsigned int vertexCount;
+	if(dynamic_cast<Bishop*>(figure)){
+		VAO = Bishop::VAO;
+		vertexCount = Bishop::vertexCount;
+	}
+	else if(dynamic_cast<King*>(figure)){
+		VAO = King::VAO;
+		vertexCount = King::vertexCount;
+	}
+		else if(dynamic_cast<Knight*>(figure)){
+		VAO = Knight::VAO;
+		vertexCount = Knight::vertexCount;
+	}
+		else if(dynamic_cast<Pawn*>(figure)){
+		VAO = Pawn::VAO;
+		vertexCount = Pawn::vertexCount;
+	}
+		else if(dynamic_cast<Queen*>(figure)){
+		VAO = Queen::VAO;
+		vertexCount = Queen::vertexCount;
+	}
+		else if(dynamic_cast<Rook*>(figure)){
+		VAO = Rook::VAO;
+		vertexCount = Rook::vertexCount;
+	}
+	glBindVertexArray(VAO);
+	glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(figure->modelMatrix));
+	glDrawArrays(GL_TRIANGLES, 0, vertexCount);
 	glBindVertexArray(0);
 }
 
@@ -324,74 +321,18 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glm::mat4 spawn = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
 	spawn = glm::scale(spawn, glm::vec3(0.015f, 0.015f, 0.015f));
 	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, -3 * ONE_TILE, 0.f));
-	
-	glm::mat4 blackRook1 = glm::rotate(glm::translate(spawn, glm::vec3(0 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackKnight1 = glm::rotate(glm::translate(spawn, glm::vec3(-ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackBishop1 = glm::rotate(glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackQueen = glm::rotate(glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackKing = glm::rotate(glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackBishop2 = glm::rotate(glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackKnight2 = glm::rotate(glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackRook2 = glm::rotate(glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 0.f, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn1 = glm::rotate(glm::translate(spawn, glm::vec3(0 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn2 = glm::rotate(glm::translate(spawn, glm::vec3(-1 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn3 = glm::rotate(glm::translate(spawn, glm::vec3(-2 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn4 = glm::rotate(glm::translate(spawn, glm::vec3(-3 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn5 = glm::rotate(glm::translate(spawn, glm::vec3(-4 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn6 = glm::rotate(glm::translate(spawn, glm::vec3(-5 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn7 = glm::rotate(glm::translate(spawn, glm::vec3(-6 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	glm::mat4 blackPawn8 = glm::rotate(glm::translate(spawn, glm::vec3(-7 * ONE_TILE, ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 
-	drawRook(blackRook1);
-	drawKnight(blackKnight1);
-	drawBishop(blackBishop1);
-	drawQueen(blackQueen);
-	drawKing(blackKing);
-	drawBishop(blackBishop2);
-	drawKnight(blackKnight2);
-	drawRook(blackRook2);
-	drawPawn(blackPawn1);
-	drawPawn(blackPawn2);
-	drawPawn(blackPawn3);
-	drawPawn(blackPawn4);
-	drawPawn(blackPawn5);
-	drawPawn(blackPawn6);
-	drawPawn(blackPawn7);
-	drawPawn(blackPawn8);
+	whiteRook1->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(0 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteKnight1->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-1 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteBishop1->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteQueen->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteKing->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteBishop2->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteKnight2->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteRook2->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 
-	glm::mat4 whiteRook1 = glm::translate(spawn, glm::vec3(0 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whiteKnight1 = glm::translate(spawn, glm::vec3(-1 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whiteBishop1 = glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whiteQueen = glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whiteKing = glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whiteBishop2 = glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whiteKnight2 = glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whiteRook2 = glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 7 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn1 = glm::translate(spawn, glm::vec3(0 * ONE_TILE, 6 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn2 = glm::translate(spawn, glm::vec3(-1 * ONE_TILE, 6 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn3 = glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 6 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn4 = glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 6 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn5 = glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 6 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn6 = glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 6 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn7 = glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 6 * ONE_TILE, 0.f));
-	glm::mat4 whitePawn8 = glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 6 * ONE_TILE, 0.f));
-
-	drawRook(whiteRook1);
-	drawKnight(whiteKnight1);
-	drawBishop(whiteBishop1);
-	drawQueen(whiteQueen);
-	drawKing(whiteKing);
-	drawBishop(whiteBishop2);
-	drawKnight(whiteKnight2);
-	drawRook(whiteRook2);
-	drawPawn(whitePawn1);
-	drawPawn(whitePawn2);
-	drawPawn(whitePawn3);
-	drawPawn(whitePawn4);
-	drawPawn(whitePawn5);
-	drawPawn(whitePawn6);
-	drawPawn(whitePawn7);
-	drawPawn(whitePawn8);
+	for(Figure* figure : allFigures)
+		draw(figure);
 
     glDisableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
 	glDisableVertexAttribArray(shaderProgram->a(shaderVertexColorsName));
