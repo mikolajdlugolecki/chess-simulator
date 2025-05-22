@@ -5,9 +5,9 @@ Figure::Figure()
     this->modelMatrix = glm::mat4(1.f);
 }
 
-Figure::Figure(glm::mat4 matrix)
+Figure::Figure(int offsetX, int offsetZ)
 {
-    this->modelMatrix = matrix;
+    
 }
 
 Figure::~Figure()

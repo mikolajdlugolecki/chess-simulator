@@ -199,6 +199,18 @@ void prepareFigures()
 	prepareFigure(Rook::VAO, Rook::VBO, &Rook::vertices, &Rook::normals, &Rook::texCoords);
 }
 
+void setupFigures(glm::mat4 modelMatrix)
+{
+	whiteRook1->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(0 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteKnight1->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-1 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteBishop1->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-2 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteQueen->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-3 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteKing->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-4 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteBishop2->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-5 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteKnight2->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-6 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	whiteRook2->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-7 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+}
+
 void initOpenGLProgram(GLFWwindow* window)
 {
 	glClearColor(0, 0, 0, 1);
@@ -238,6 +250,9 @@ void freeOpenGLProgram(GLFWwindow* window)
 	glDeleteBuffers(3, Queen::VBO);
 	glDeleteVertexArrays(1, &Rook::VAO);
 	glDeleteBuffers(3, Rook::VBO);
+	for(Figure* figure : allFigures)
+		delete figure;
+	allFigures.clear();
 }
 
 void draw(Figure *figure)
@@ -321,15 +336,7 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glm::mat4 spawn = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
 	spawn = glm::scale(spawn, glm::vec3(0.015f, 0.015f, 0.015f));
 	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, -3 * ONE_TILE, 0.f));
-
-	whiteRook1->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(0 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteKnight1->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-1 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteBishop1->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-2 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteQueen->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-3 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteKing->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-4 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteBishop2->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-5 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteKnight2->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-6 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteRook2->modelMatrix = glm::rotate(glm::translate(spawn, glm::vec3(-7 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	setupFigures(spawn);
 
 	for(Figure* figure : allFigures)
 		draw(figure);

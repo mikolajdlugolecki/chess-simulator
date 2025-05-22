@@ -9,9 +9,13 @@ class Figure
 {
 public:
     Figure();
-    Figure(glm::mat4 matrix);
+    Figure(int offsetX, int offsetZ);
     glm::mat4 modelMatrix;
     virtual ~Figure();
+    int offsetX;
+    int offsetZ;
+    int currentX;
+    int currentZ;
 };
 
 class Bishop : public Figure
