@@ -228,10 +228,7 @@ void setupFigures(glm::mat4 modelMatrix)
 	for(Figure* blackFigure : blackFigures)
 		blackFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3((blackFigure->initX + blackFigure->currentX) * ONE_TILE, (blackFigure->initZ + blackFigure->currentZ) * ONE_TILE, 0.f));
 }
-
-void initOpenGLProgram(GLFWwindow* window)
-{
-	
+void readingFile(){
 	std::string move;
 	std::ifstream readFile("src/moves.txt");
 	if(!readFile.is_open()){
@@ -257,6 +254,10 @@ void initOpenGLProgram(GLFWwindow* window)
 		else std::cout << "Ruch czarnych z "<< from[i] << " na "<< to[i] << std::endl;
 		i++;
 	}
+}
+void initOpenGLProgram(GLFWwindow* window)
+{
+	readingFile();
 	glClearColor(0, 0, 0, 1);
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
