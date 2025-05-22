@@ -9,11 +9,11 @@ class Figure
 {
 public:
     Figure();
-    Figure(int offsetX, int offsetZ);
+    Figure(int initX, int initZ);
     glm::mat4 modelMatrix;
     virtual ~Figure();
-    int offsetX;
-    int offsetZ;
+    int initX;
+    int initZ;
     int currentX;
     int currentZ;
 };
@@ -21,6 +21,7 @@ public:
 class Bishop : public Figure
 {
 public:
+    using Figure::Figure;
     static unsigned int vertexCount;
     static std::vector<float> vertices;
     static std::vector<float> normals;
@@ -32,6 +33,7 @@ public:
 class King : public Figure
 {
 public:
+    using Figure::Figure;
     static unsigned int vertexCount;
     static std::vector<float> vertices;
     static std::vector<float> normals;
@@ -43,6 +45,7 @@ public:
 class Knight : public Figure
 {
 public:
+    using Figure::Figure;
     static unsigned int vertexCount;
     static std::vector<float> vertices;
     static std::vector<float> normals;
@@ -54,6 +57,7 @@ public:
 class Pawn : public Figure
 {
 public:
+    using Figure::Figure;
     static unsigned int vertexCount;
     static std::vector<float> vertices;
     static std::vector<float> normals;
@@ -65,6 +69,7 @@ public:
 class Queen : public Figure
 {
 public:
+    using Figure::Figure;
     static unsigned int vertexCount;
     static std::vector<float> vertices;
     static std::vector<float> normals;
@@ -76,6 +81,7 @@ public:
 class Rook : public Figure
 {
 public:
+    using Figure::Figure;
     static unsigned int vertexCount;
     static std::vector<float> vertices;
     static std::vector<float> normals;

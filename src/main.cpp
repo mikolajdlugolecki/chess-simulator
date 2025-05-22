@@ -27,15 +27,25 @@ const char* shaderVertexCoordinatesName = "vertexCoordinates";
 const char* shaderVertexColorsName = "vertexColors";
 const char* shaderVertexNormalsName = "vertexNormals";
 const char* shaderVertexTexturingCoordinatesName = "vertexTexturingCoordinates";
-Rook* whiteRook1 = new Rook;
-Knight* whiteKnight1 = new Knight;
-Bishop* whiteBishop1 = new Bishop;
-Queen* whiteQueen = new Queen;
-King* whiteKing = new King;
-Bishop* whiteBishop2 = new Bishop;
-Knight* whiteKnight2 = new Knight;
-Rook* whiteRook2 = new Rook;
-std::vector<Figure*> allFigures;
+Rook* whiteRook1 = new Rook(0, 0);
+Knight* whiteKnight1 = new Knight(-1, 0);
+Bishop* whiteBishop1 = new Bishop(-2, 0);
+Queen* whiteQueen = new Queen(-3, 0);
+King* whiteKing = new King(-4, 0);
+Bishop* whiteBishop2 = new Bishop(-5, 0);
+Knight* whiteKnight2 = new Knight(-6, 0);
+Rook* whiteRook2 = new Rook(-7, 0);
+
+Rook* blackRook1 = new Rook(0, 7);
+Knight* blackKnight1 = new Knight(-1, 7);
+Bishop* blackBishop1 = new Bishop(-2, 7);
+Queen* blackQueen = new Queen(-3, 7);
+King* blackKing = new King(-4, 7);
+Bishop* blackBishop2 = new Bishop(-5, 7);
+Knight* blackKnight2 = new Knight(-6, 7);
+Rook* blackRook2 = new Rook(-7, 7);
+std::vector<Figure*> whiteFigures;
+std::vector<Figure*> blackFigures;
 
 void genereteBoard(void)
 {
@@ -129,14 +139,22 @@ void error_callback(int error, const char* description)
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if(action == GLFW_PRESS){
-        if(key == GLFW_KEY_LEFT) 
-			speedX = -PI / 2;
+        // if(key == GLFW_KEY_LEFT) 
+		// 	speedX = -PI / 2;
+        // if(key == GLFW_KEY_RIGHT)
+		// 	speedX = PI / 2;
+        // if(key == GLFW_KEY_UP)
+		// 	speedY = PI / 2;
+        // if(key == GLFW_KEY_DOWN)
+		// 	speedY = -PI / 2;
+		if(key == GLFW_KEY_LEFT) 
+			whiteRook1->currentX++;
         if(key == GLFW_KEY_RIGHT)
-			speedX = PI / 2;
+			whiteRook1->currentX--;
         if(key == GLFW_KEY_UP)
-			speedY = PI / 2;
+			whiteRook1->currentZ--;
         if(key == GLFW_KEY_DOWN)
-			speedY = -PI / 2;
+			whiteRook1->currentZ++;
     }
     if(action == GLFW_RELEASE){
         if(key == GLFW_KEY_LEFT)
@@ -201,14 +219,10 @@ void prepareFigures()
 
 void setupFigures(glm::mat4 modelMatrix)
 {
-	whiteRook1->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(0 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteKnight1->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-1 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteBishop1->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-2 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteQueen->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-3 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteKing->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-4 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteBishop2->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-5 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteKnight2->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-6 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
-	whiteRook2->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-7 * ONE_TILE, 0 * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	for(Figure* whiteFigure : whiteFigures)
+		whiteFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3((whiteFigure->initX + whiteFigure->currentX) * ONE_TILE, (whiteFigure->initZ + whiteFigure->currentZ) * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+	for(Figure* blackFigure : blackFigures)
+		blackFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3((blackFigure->initX + blackFigure->currentX) * ONE_TILE, (blackFigure->initZ + blackFigure->currentZ) * ONE_TILE, 0.f));
 }
 
 void initOpenGLProgram(GLFWwindow* window)
@@ -223,14 +237,26 @@ void initOpenGLProgram(GLFWwindow* window)
 	genereteBoard();
 	loadFigures();
 	prepareFigures();
-	allFigures.push_back(whiteRook1);
-	allFigures.push_back(whiteKnight1);
-	allFigures.push_back(whiteBishop1);
-	allFigures.push_back(whiteQueen);
-	allFigures.push_back(whiteKing);
-	allFigures.push_back(whiteBishop2);
-	allFigures.push_back(whiteKnight2);
-	allFigures.push_back(whiteRook2);
+	whiteFigures.push_back(whiteRook1);
+	whiteFigures.push_back(whiteKnight1);
+	whiteFigures.push_back(whiteBishop1);
+	whiteFigures.push_back(whiteQueen);
+	whiteFigures.push_back(whiteKing);
+	whiteFigures.push_back(whiteBishop2);
+	whiteFigures.push_back(whiteKnight2);
+	whiteFigures.push_back(whiteRook2);
+	blackFigures.push_back(blackRook1);
+	blackFigures.push_back(blackKnight1);
+	blackFigures.push_back(blackBishop1);
+	blackFigures.push_back(blackQueen);
+	blackFigures.push_back(blackKing);
+	blackFigures.push_back(blackBishop2);
+	blackFigures.push_back(blackKnight2);
+	blackFigures.push_back(blackRook2);
+	for(int i=0; i<8; i++){
+		whiteFigures.push_back(new Pawn(-i, 1));
+		blackFigures.push_back(new Pawn(-i, 6));
+	}
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
@@ -250,9 +276,9 @@ void freeOpenGLProgram(GLFWwindow* window)
 	glDeleteBuffers(3, Queen::VBO);
 	glDeleteVertexArrays(1, &Rook::VAO);
 	glDeleteBuffers(3, Rook::VBO);
-	for(Figure* figure : allFigures)
+	for(Figure* figure : whiteFigures)
 		delete figure;
-	allFigures.clear();
+	whiteFigures.clear();
 }
 
 void draw(Figure *figure)
@@ -338,8 +364,10 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, -3 * ONE_TILE, 0.f));
 	setupFigures(spawn);
 
-	for(Figure* figure : allFigures)
-		draw(figure);
+	for(Figure* whiteFigure : whiteFigures)
+		draw(whiteFigure);
+	for(Figure* blackFigure : blackFigures)
+		draw(blackFigure);
 
     glDisableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
 	glDisableVertexAttribArray(shaderProgram->a(shaderVertexColorsName));
