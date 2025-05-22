@@ -11,6 +11,7 @@
 #include <fstream>
 #include <string>
 #include <map>
+#include <vector>
 
 #include "constants.h"
 #include "lodepng.h"
@@ -18,15 +19,17 @@
 #include "ShaderProgram.h"
 #include "Board.h"
 #include "Figures.h"
+#include "myCube.h"
 
 #define ONE_TILE 66.6f
 
-std::string from[1000];
-std::string to[1000];
+std::vector<std::string> from;
+std::vector<std::string> to;
 float speedX = 0;
 float speedY = 0;
 float aspectRatio = 1;
 ShaderProgram *shaderProgram;
+ShaderProgram *sp;
 GLuint whiteTileTexture;
 GLuint blackTileTexture;
 
@@ -185,7 +188,15 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			speedY = 0;
         if(key == GLFW_KEY_DOWN)
 			speedY = 0;
-    }
+        if(key == GLFW_KEY_A)
+			speedX = 0;
+        if(key == GLFW_KEY_D)
+			speedX = 0;
+        if(key == GLFW_KEY_W)
+			speedY = 0;
+        if(key == GLFW_KEY_S)
+			speedY = 0;
+	}
 }
 
 void windowResizeCallback(GLFWwindow* window, int width, int height) 
@@ -308,6 +319,7 @@ void initOpenGLProgram(GLFWwindow* window)
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	glfwSetKeyCallback(window, keyCallback);
 	shaderProgram = new ShaderProgram("shader/v_chess.glsl", NULL, "shader/f_chess.glsl");
+	sp = new ShaderProgram("shader/v_textured.glsl",NULL,"shader/f_textured.glsl");
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
 	genereteBoard();
@@ -339,6 +351,7 @@ void initOpenGLProgram(GLFWwindow* window)
 void freeOpenGLProgram(GLFWwindow* window)
 {
 	delete shaderProgram;
+	delete sp;
 	glDeleteTextures(1, &whiteTileTexture);
 	glDeleteTextures(1, &blackTileTexture);
 	glDeleteVertexArrays(1, &Bishop::VAO);
@@ -395,6 +408,38 @@ void draw(Figure *figure)
 	glBindVertexArray(0);
 }
 
+void drawBoardEdges(glm::mat4 M){
+	
+	for(int i=0;i<2;i++){
+		glm::mat4 M3 = M; 
+		M3 = glm::scale(M3,glm::vec3(4.0f,0.25f,0.25f));
+		if(i==0){
+			M3=glm::translate(M3,glm::vec3(-0.125f,-1.0f,15.0f));
+		}
+		if(i==1){
+			M3=glm::translate(M3,glm::vec3(-0.125f,-1.0f,-19.0f));		
+		}
+		glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M3));
+		glVertexAttribPointer(sp->a("vertex"),4,GL_FLOAT,false,0,myCubeVertexCount);
+		glVertexAttribPointer(sp->a("texCoords"),2,GL_FLOAT,false,0,myCubeTexCoords);
+		glActiveTexture(GL_TEXTURE1); 
+		glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
+		glUniform1i(sp->u("edge"), 1);
+		glDrawArrays(GL_TRIANGLES,0,myCubeVertexCount);
+	}
+	for(int i=0;i<2;i++){
+		glm::mat4 M4 = M; 
+		M4 = glm::scale(M4,glm::vec3(0.25f,0.25f,4.5f));
+		if(i==0){
+			M4 = glm::translate(M4,glm::vec3(15.0f,-1.0f,-0.111f));
+		}
+		if(i==1){
+			M4 = glm::translate(M4,glm::vec3(-19.0f,-1.0f,-0.111f));
+		}
+		glUniformMatrix4fv(sp->u("M"),1,false,glm::value_ptr(M4));
+		glDrawArrays(GL_TRIANGLES,0,myCubeVertexCount);
+	}
+}
 
 void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 {
@@ -409,7 +454,6 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glUniformMatrix4fv(shaderProgram->u("P"), 1, false, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(shaderProgram->u("V"), 1, false, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(shaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-
 	glEnableVertexAttribArray(shaderProgram->a(shaderVertexCoordinatesName));
 	glEnableVertexAttribArray(shaderProgram->a(shaderVertexColorsName));
 	glEnableVertexAttribArray(shaderProgram->a(shaderVertexNormalsName));
@@ -440,6 +484,7 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	
 	glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 
+
 	glm::mat4 spawn = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
 	spawn = glm::scale(spawn, glm::vec3(0.015f, 0.015f, 0.015f));
 	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, 4 * ONE_TILE, 0.f));
@@ -456,6 +501,17 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glDisableVertexAttribArray(shaderProgram->a(shaderVertexTexturingCoordinatesName));
 	glDisableVertexAttribArray(shaderProgram->a("textureIndexIn"));
 	
+	sp->use();
+	glUniformMatrix4fv(sp->u("P"), 1, false, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(sp->u("V"), 1, false, glm::value_ptr(viewMatrix));
+    glUniformMatrix4fv(sp->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	
+	glEnableVertexAttribArray(sp->a("vertex"));
+	glEnableVertexAttribArray(sp->a("texCoords"));
+	drawBoardEdges(modelMatrix);	
+	
+	glDisableVertexAttribArray(sp->a("vertex"));
+	glDisableVertexAttribArray(sp->a("texCoords"));
     glfwSwapBuffers(window);
 }
 
