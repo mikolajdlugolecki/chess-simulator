@@ -10,7 +10,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <map>
 #include <vector>
+
 #include "constants.h"
 #include "lodepng.h"
 #include "OBJ_Loader.h"
@@ -30,6 +32,7 @@ ShaderProgram *shaderProgram;
 ShaderProgram *sp;
 GLuint whiteTileTexture;
 GLuint blackTileTexture;
+
 const char* shaderVertexCoordinatesName = "vertexCoordinates";
 const char* shaderVertexColorsName = "vertexColors";
 const char* shaderVertexNormalsName = "vertexNormals";
@@ -44,16 +47,28 @@ Bishop* whiteBishop2 = new Bishop(-5, 0);
 Knight* whiteKnight2 = new Knight(-6, 0);
 Rook* whiteRook2 = new Rook(-7, 0);
 
-Rook* blackRook1 = new Rook(0, 7);
-Knight* blackKnight1 = new Knight(-1, 7);
-Bishop* blackBishop1 = new Bishop(-2, 7);
-Queen* blackQueen = new Queen(-3, 7);
-King* blackKing = new King(-4, 7);
-Bishop* blackBishop2 = new Bishop(-5, 7);
-Knight* blackKnight2 = new Knight(-6, 7);
-Rook* blackRook2 = new Rook(-7, 7);
+Rook* blackRook1 = new Rook(0, -7);
+Knight* blackKnight1 = new Knight(-1, -7);
+Bishop* blackBishop1 = new Bishop(-2, -7);
+Queen* blackQueen = new Queen(-3, -7);
+King* blackKing = new King(-4, -7);
+Bishop* blackBishop2 = new Bishop(-5, -7);
+Knight* blackKnight2 = new Knight(-6, -7);
+Rook* blackRook2 = new Rook(-7, -7);
+
 std::vector<Figure*> whiteFigures;
 std::vector<Figure*> blackFigures;
+
+std::map<char, int> lettersDigits = {
+	{'a', 0},
+	{'b', 1},
+	{'c', 2},
+	{'d', 3},
+	{'e', 4},
+	{'f', 5},
+	{'g', 6},
+	{'h', 7}
+};
 
 void genereteBoard(void)
 {
@@ -147,22 +162,22 @@ void error_callback(int error, const char* description)
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if(action == GLFW_PRESS){
-        if(key == GLFW_KEY_A) 
-		 	speedX = -PI / 2;
-        if(key == GLFW_KEY_D)
-		 	speedX = PI / 2;
-        if(key == GLFW_KEY_W)
-		 	speedY = PI / 2;
-        if(key == GLFW_KEY_S)
-		 	speedY = -PI / 2;
-		if(key == GLFW_KEY_LEFT) 
-			whiteRook1->currentX++;
+        if(key == GLFW_KEY_LEFT) 
+			speedX = -PI / 2;
         if(key == GLFW_KEY_RIGHT)
-			whiteRook1->currentX--;
+			speedX = PI / 2;
         if(key == GLFW_KEY_UP)
-			whiteRook1->currentZ--;
+			speedY = PI / 2;
         if(key == GLFW_KEY_DOWN)
-			whiteRook1->currentZ++;
+			speedY = -PI / 2;
+		// if(key == GLFW_KEY_LEFT) 
+		// 	whiteRook1->currentX++;
+        // if(key == GLFW_KEY_RIGHT)
+		// 	whiteRook1->currentX--;
+        // if(key == GLFW_KEY_UP)
+		// 	whiteRook1->currentZ--;
+        // if(key == GLFW_KEY_DOWN)
+		// 	whiteRook1->currentZ++;
     }
     if(action == GLFW_RELEASE){
         if(key == GLFW_KEY_LEFT)
@@ -236,38 +251,66 @@ void prepareFigures()
 void setupFigures(glm::mat4 modelMatrix)
 {
 	for(Figure* whiteFigure : whiteFigures)
-		whiteFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3((whiteFigure->initX + whiteFigure->currentX) * ONE_TILE, (whiteFigure->initZ + whiteFigure->currentZ) * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+		whiteFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3((whiteFigure->initX + whiteFigure->currentX) * ONE_TILE, (whiteFigure->initZ + whiteFigure->currentZ) * ONE_TILE, 0.f));
 	for(Figure* blackFigure : blackFigures)
-		blackFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3((blackFigure->initX + blackFigure->currentX) * ONE_TILE, (blackFigure->initZ + blackFigure->currentZ) * ONE_TILE, 0.f));
+		blackFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3((blackFigure->initX + blackFigure->currentX) * ONE_TILE, (blackFigure->initZ + blackFigure->currentZ) * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 }
+
 void readingFile(){
 	std::string move;
 	std::ifstream readFile("src/moves.txt");
 	if(!readFile.is_open()){
 		std::cerr << "Error: Cannot open a file" << std::endl;
 	}
-	int n=0;
-	while(getline(readFile,move)){
-		std::string fromxz = ""; 
-		fromxz += move[0];
-		fromxz += move[1];
-		from.push_back(fromxz);
-		std::string toxz = ""; 
-		toxz += move[3];
-		toxz += move[4];
-		to.push_back(toxz);
+	int curr_mv = 0, n = 0;
+	while(getline(readFile, move)){
+		from[curr_mv] = "";
+		from[curr_mv]+= move[0];
+		from[curr_mv]+= move[1];
+		to[curr_mv] = "";
+		to[curr_mv]+= move[3];
+		to[curr_mv]+= move[4];
+		curr_mv++;
 		n++;
 	}
 	readFile.close();
 	int i=0;
-	while(i<n){
-		if(i%2==0){
+	while(i < n){
+		if(i % 2 == 0)
 			std::cout << "Ruch białych z "<< from[i] << " na "<< to[i] << std::endl;
-		}
-		else std::cout << "Ruch czarnych z "<< from[i] << " na "<< to[i] << std::endl;
+		else 
+			std::cout << "Ruch czarnych z "<< from[i] << " na "<< to[i] << std::endl;
 		i++;
 	}
 }
+
+void makeMoves()
+{
+	int sourceX, sourceZ, destX, destZ;
+	for(int i=0; i<3; i++){
+		sourceX = lettersDigits[from[i][0]];
+		sourceZ = int(from[i][1]) - 1 - 48;
+		destX = lettersDigits[to[i][0]];
+		destZ = int(to[i][1]) - 1 - 48;
+		if(i % 2 == 0){
+			for(Figure* whiteFigure : whiteFigures)
+				if(whiteFigure->initX + whiteFigure->currentX == -sourceX && whiteFigure->initZ + whiteFigure->currentZ == -sourceZ){
+					whiteFigure->currentX = -(destX + whiteFigure->initX + whiteFigure->currentX);
+					whiteFigure->currentZ = -(destZ + whiteFigure->initZ + whiteFigure->currentZ);
+					break;
+				}
+		}else{
+			for(Figure* blackFigure : blackFigures){
+				if(blackFigure->initX + blackFigure->currentX == -sourceX && blackFigure->initZ + blackFigure->currentZ == -sourceZ){
+					blackFigure->currentX = -(destX + blackFigure->initX + blackFigure->currentX);
+					blackFigure->currentZ = -(destZ + blackFigure->initZ + blackFigure->currentZ);
+					break;
+				}
+			}
+		}
+	}
+}
+
 void initOpenGLProgram(GLFWwindow* window)
 {
 	readingFile();
@@ -299,9 +342,10 @@ void initOpenGLProgram(GLFWwindow* window)
 	blackFigures.push_back(blackKnight2);
 	blackFigures.push_back(blackRook2);
 	for(int i=0; i<8; i++){
-		whiteFigures.push_back(new Pawn(-i, 1));
-		blackFigures.push_back(new Pawn(-i, 6));
+		whiteFigures.push_back(new Pawn(-i, -1));
+		blackFigures.push_back(new Pawn(-i, -6));
 	}
+	makeMoves();
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
@@ -322,9 +366,12 @@ void freeOpenGLProgram(GLFWwindow* window)
 	glDeleteBuffers(3, Queen::VBO);
 	glDeleteVertexArrays(1, &Rook::VAO);
 	glDeleteBuffers(3, Rook::VBO);
-	for(Figure* figure : whiteFigures)
-		delete figure;
+	for(Figure* whiteFigure : whiteFigures)
+		delete whiteFigure;
+	for(Figure* blackFigure : blackFigures)
+		delete blackFigure;
 	whiteFigures.clear();
+	blackFigures.clear();
 }
 
 void draw(Figure *figure)
@@ -339,19 +386,19 @@ void draw(Figure *figure)
 		VAO = King::VAO;
 		vertexCount = King::vertexCount;
 	}
-		else if(dynamic_cast<Knight*>(figure)){
+	else if(dynamic_cast<Knight*>(figure)){
 		VAO = Knight::VAO;
 		vertexCount = Knight::vertexCount;
 	}
-		else if(dynamic_cast<Pawn*>(figure)){
+	else if(dynamic_cast<Pawn*>(figure)){
 		VAO = Pawn::VAO;
 		vertexCount = Pawn::vertexCount;
 	}
-		else if(dynamic_cast<Queen*>(figure)){
+	else if(dynamic_cast<Queen*>(figure)){
 		VAO = Queen::VAO;
 		vertexCount = Queen::vertexCount;
 	}
-		else if(dynamic_cast<Rook*>(figure)){
+	else if(dynamic_cast<Rook*>(figure)){
 		VAO = Rook::VAO;
 		vertexCount = Rook::vertexCount;
 	}
@@ -393,6 +440,7 @@ void drawBoardEdges(glm::mat4 M){
 		glDrawArrays(GL_TRIANGLES,0,myCubeVertexCount);
 	}
 }
+
 void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -439,7 +487,7 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 
 	glm::mat4 spawn = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
 	spawn = glm::scale(spawn, glm::vec3(0.015f, 0.015f, 0.015f));
-	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, -3 * ONE_TILE, 0.f));
+	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, 4 * ONE_TILE, 0.f));
 	setupFigures(spawn);
 
 	for(Figure* whiteFigure : whiteFigures)
@@ -491,7 +539,7 @@ int main(void)
 	float angleX = 0;
 	float angleY = 0;
 	glfwSetTime(0);
-	
+	double lastTime = glfwGetTime();
 	while(!glfwWindowShouldClose(window)){
         angleX += speedX * glfwGetTime();
 		angleY += speedY * glfwGetTime();
