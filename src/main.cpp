@@ -7,7 +7,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <iostream>
+#include <fstream>
+#include <string>
 #include "constants.h"
 #include "lodepng.h"
 #include "OBJ_Loader.h"
@@ -17,6 +19,8 @@
 
 #define ONE_TILE 66.6f
 
+std::string from[1000];
+std::string to[1000];
 float speedX = 0;
 float speedY = 0;
 float aspectRatio = 1;
@@ -213,6 +217,32 @@ void setupFigures(glm::mat4 modelMatrix)
 
 void initOpenGLProgram(GLFWwindow* window)
 {
+	
+	std::string move;
+	std::ifstream readFile("src/moves.txt");
+	if(!readFile.is_open()){
+		std::cerr << "Error: Cannot open a file" << std::endl;
+	}
+	int curr_mv=0,n=0;
+	while(getline(readFile,move)){
+		from[curr_mv] = "";
+		from[curr_mv]+= move[0];
+		from[curr_mv]+= move[1];
+		to[curr_mv] = "";
+		to[curr_mv]+= move[3];
+		to[curr_mv]+= move[4];
+		curr_mv++;
+		n++;
+	}
+	readFile.close();
+	int i=0;
+	while(i<n){
+		if(i%2==0){
+			std::cout << "Ruch białych z "<< from[i] << " na "<< to[i] << std::endl;
+		}
+		else std::cout << "Ruch czarnych z "<< from[i] << " na "<< to[i] << std::endl;
+		i++;
+	}
 	glClearColor(0, 0, 0, 1);
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
