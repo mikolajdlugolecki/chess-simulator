@@ -16,5 +16,5 @@ void main(void){
 			pixelColor = texture(whiteTile, interpolatedTexturingCoordinates);
 	}
 	else
-		pixelColor = interpolatedColors;
+		pixelColor = texture(blackTile, interpolatedTexturingCoordinates);
 }
