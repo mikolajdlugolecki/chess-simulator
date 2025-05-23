@@ -31,7 +31,8 @@ ShaderProgram *chessShaderProgram;
 
 GLuint whiteTileTexture;
 GLuint blackTileTexture;
-
+GLuint whiteFiguresTexture;
+GLuint blackFiguresTexture;
 const char* shaderVertexCoordinatesName = "vertexCoordinates";
 const char* shaderVertexColorsName = "vertexColors";
 const char* shaderVertexNormalsName = "vertexNormals";
@@ -309,6 +310,8 @@ void initOpenGLProgram(GLFWwindow* window)
 	chessShaderProgram = new ShaderProgram("shader/v_chess.glsl", NULL, "shader/f_chess.glsl");
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
+	whiteFiguresTexture = readTexture("texture/whitefig.jpg");
+	blackFiguresTexture = readTexture("texture/blackfig.jpg");
 	genereteBoard();
 	initFigures();
 	makeMoves();
@@ -412,8 +415,14 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	glBindTexture(GL_TEXTURE_2D, blackTileTexture);
 	glActiveTexture(GL_TEXTURE1); 
 	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
+	glActiveTexture(GL_TEXTURE3); 
+	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
+	glActiveTexture(GL_TEXTURE4); 
+	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
 	glUniform1i(chessShaderProgram->u("blackTile"), 0);
 	glUniform1i(chessShaderProgram->u("whiteTile"), 1);
+	glUniform1i(chessShaderProgram->u("whiteFig"), 2);
+	glUniform1i(chessShaderProgram->u("blackFig"), 3);
 	
 	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
 
@@ -426,13 +435,17 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	
 	glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 
+	
 	glm::mat4 spawn = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
 	spawn = glm::scale(spawn, glm::vec3(0.015f, 0.015f, 0.015f));
 	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, 4 * ONE_TILE, 0.f));
 	setupFigures(spawn);
 	
+	glUniform1i(chessShaderProgram->u("useTexture"), 2);
 	for(Figure* whiteFigure : whiteFigures)
 		drawFigure(whiteFigure);
+
+	glUniform1i(chessShaderProgram->u("useTexture"), 3);
 	for(Figure* blackFigure : blackFigures)
 		drawFigure(blackFigure);
 

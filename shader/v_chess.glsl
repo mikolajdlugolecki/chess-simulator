@@ -10,7 +10,7 @@ flat out int textureIndex;
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
-uniform bool useTexture;
+uniform int useTexture;
 
 void main(void){
     gl_Position = P * V * M * vertexCoordinates;
