@@ -31,8 +31,9 @@ ShaderProgram *chessShaderProgram;
 
 GLuint whiteTileTexture;
 GLuint blackTileTexture;
-GLuint whiteFiguresTexture;
-GLuint blackFiguresTexture;
+GLuint whiteFigureTexture;
+GLuint blackFigureTexture;
+
 const char* shaderVertexCoordinatesName = "vertexCoordinates";
 const char* shaderVertexColorsName = "vertexColors";
 const char* shaderVertexNormalsName = "vertexNormals";
@@ -41,19 +42,29 @@ const char* shaderVertexTexturingCoordinatesName = "vertexTexturingCoordinates";
 std::vector<Figure*> whiteFigures;
 std::vector<Figure*> blackFigures;
 
+enum whatToDraw
+{
+	CHESSBOARD = 0,
+	CHESSBOARD_BASE,
+	WHITE_FIGURE,
+	BLACK_FIGURE
+};
+
 void readFile(void);
-void genereteBoard(void);
+void initChessboard(void);
 void loadFigure(const char* fileName, unsigned int &vertexCount, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords);
 void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords);
 void initFigures(void);
 void setupFigures(glm::mat4 modelMatrix);
 void drawFigure(Figure *figure);
-void drawBoardEdges(glm::mat4 modelMatrix);
+void drawChessboard(glm::mat4 modelMatrix);
 void makeMoves(void);
 GLuint readTexture(const char* filename);
 void errorCallback(int error, const char* description);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void windowResizeCallback(GLFWwindow* window, int width, int height);
+void enableShaders(void);
+void disableShaders(void);
 void initOpenGLProgram(GLFWwindow* window);
 void drawScene(GLFWwindow* window, float angle_x, float angle_y);
 void freeOpenGLProgram(GLFWwindow* window);
@@ -95,7 +106,7 @@ int main(void)
 	return EXIT_SUCCESS;
 }
 
-void genereteBoard(void)
+void initChessboard(void)
 {
 	int vertexIndex = 0;
 	bool white = true;
@@ -205,14 +216,6 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			speedY = 0;
         if(key == GLFW_KEY_DOWN)
 			speedY = 0;
-        if(key == GLFW_KEY_A)
-			speedX = 0;
-        if(key == GLFW_KEY_D)
-			speedX = 0;
-        if(key == GLFW_KEY_W)
-			speedY = 0;
-        if(key == GLFW_KEY_S)
-			speedY = 0;
 	}
 }
 
@@ -222,6 +225,37 @@ void windowResizeCallback(GLFWwindow* window, int width, int height)
 		return;
     aspectRatio = (float)width / (float)height;
     glViewport(0, 0, width, height);
+}
+
+void enableShaders(void)
+{
+	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexCoordinatesName));
+	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexColorsName));
+	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexNormalsName));
+	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexTexturingCoordinatesName));
+	glEnableVertexAttribArray(chessShaderProgram->a("textureIndexIn"));
+
+	glActiveTexture(GL_TEXTURE0); 
+	glBindTexture(GL_TEXTURE_2D, blackTileTexture);
+	glUniform1i(chessShaderProgram->u("blackTileTexture"), 0);
+	glActiveTexture(GL_TEXTURE1); 
+	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
+	glUniform1i(chessShaderProgram->u("whiteTileTexture"), 1);
+	glActiveTexture(GL_TEXTURE2); 
+	glBindTexture(GL_TEXTURE_2D, blackFigureTexture);
+	glUniform1i(chessShaderProgram->u("blackFigureTexture"), 2);
+	glActiveTexture(GL_TEXTURE3); 
+	glBindTexture(GL_TEXTURE_2D, whiteFigureTexture);
+	glUniform1i(chessShaderProgram->u("whiteFigureTexture"), 3);
+}
+
+void disableShaders(void)
+{
+	glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexCoordinatesName));
+	glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexColorsName));
+	glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexNormalsName));
+	glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexTexturingCoordinatesName));
+	glDisableVertexAttribArray(chessShaderProgram->a("textureIndexIn"));
 }
 
 void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords)
@@ -248,9 +282,9 @@ void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::
 void setupFigures(glm::mat4 modelMatrix)
 {
 	for(Figure* whiteFigure : whiteFigures)
-		whiteFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3((whiteFigure->initX + whiteFigure->currentX) * ONE_TILE, (whiteFigure->initZ + whiteFigure->currentZ) * ONE_TILE, 0.f));
+		whiteFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3(whiteFigure->positionX * ONE_TILE, whiteFigure->positionZ * ONE_TILE, 0.f));
 	for(Figure* blackFigure : blackFigures)
-		blackFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3((blackFigure->initX + blackFigure->currentX) * ONE_TILE, (blackFigure->initZ + blackFigure->currentZ) * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+		blackFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(blackFigure->positionX * ONE_TILE, blackFigure->positionZ * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 }
 
 void readFile(void)
@@ -272,7 +306,7 @@ void readFile(void)
 	}
 	file.close();
 }
-
+// TODO
 void makeMoves(void)
 {
 	int sourceX, sourceZ, destinationX, destinationZ;
@@ -281,22 +315,21 @@ void makeMoves(void)
 		sourceZ = int(moveFromTile[i][1]) - 1 - 48;
 		destinationX = boardMap[moveToTile[i][0]];
 		destinationZ = int(moveToTile[i][1]) - 1 - 48;
+		std::vector<Figure*> potentialFiguresToMove;
+		std::vector<Figure*> potentialFiguresToDelete;
 		if(i % 2 == 0){
-			for(Figure* whiteFigure : whiteFigures)
-				if(whiteFigure->initX + whiteFigure->currentX == -sourceX && whiteFigure->initZ + whiteFigure->currentZ == -sourceZ){
-					whiteFigure->currentX = -(destinationX + whiteFigure->initX + whiteFigure->currentX);
-					whiteFigure->currentZ = -(destinationZ + whiteFigure->initZ + whiteFigure->currentZ);
-					break;
-				}
+			potentialFiguresToMove = whiteFigures;
+			potentialFiguresToDelete = blackFigures;
 		}else{
-			for(Figure* blackFigure : blackFigures){
-				if(blackFigure->initX + blackFigure->currentX == -sourceX && blackFigure->initZ + blackFigure->currentZ == -sourceZ){
-					blackFigure->currentX = -(destinationX + blackFigure->initX + blackFigure->currentX);
-					blackFigure->currentZ = -(destinationZ + blackFigure->initZ + blackFigure->currentZ);
-					break;
-				}
-			}
+			potentialFiguresToMove = blackFigures;
+			potentialFiguresToDelete = whiteFigures;
 		}
+		for(Figure* figure : potentialFiguresToMove)
+			if(figure->positionX == -sourceX && figure->positionZ == -sourceZ){
+				figure->positionX = -destinationX;
+				figure->positionZ = -destinationZ;
+				break;
+			}
 	}
 }
 
@@ -307,12 +340,12 @@ void initOpenGLProgram(GLFWwindow* window)
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	glfwSetKeyCallback(window, keyCallback);
-	chessShaderProgram = new ShaderProgram("shader/v_chess.glsl", NULL, "shader/f_chess.glsl");
+	chessShaderProgram = new ShaderProgram("shader/vertex-shader.glsl", NULL, "shader/fragment-shader.glsl");
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
-	whiteFiguresTexture = readTexture("texture/whitefig.jpg");
-	blackFiguresTexture = readTexture("texture/blackfig.jpg");
-	genereteBoard();
+	whiteFigureTexture = readTexture("texture/light-wood.png");
+	blackFigureTexture = readTexture("texture/dark-wood.png");
+	initChessboard();
 	initFigures();
 	makeMoves();
 }
@@ -322,6 +355,8 @@ void freeOpenGLProgram(GLFWwindow* window)
 	delete chessShaderProgram;
 	glDeleteTextures(1, &whiteTileTexture);
 	glDeleteTextures(1, &blackTileTexture);
+	glDeleteTextures(1, &whiteFigureTexture);
+	glDeleteTextures(1, &blackFigureTexture);
 	glDeleteVertexArrays(1, &Bishop::VAO);
 	glDeleteBuffers(3, Bishop::VBO);
 	glDeleteVertexArrays(1, &King::VAO);
@@ -371,18 +406,36 @@ void drawFigure(Figure *figure)
 	glBindVertexArray(0);
 }
 
-void drawBoardEdges(glm::mat4 modelMatrix)
+void drawChessboard(glm::mat4 modelMatrix)
 {
+	glVertexAttribPointer(chessShaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, false, 0, boardVertices);
+	glVertexAttribPointer(chessShaderProgram->a(shaderVertexColorsName), 4, GL_FLOAT, false, 0, boardColors);
+	glVertexAttribPointer(chessShaderProgram->a(shaderVertexNormalsName), 4, GL_FLOAT, false, 0, boardNormals);
+	glVertexAttribPointer(chessShaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, false, 0, boardTexCoords);
+	glVertexAttribPointer(chessShaderProgram->a("textureIndexIn"), 1, GL_FLOAT, false, 0, boardTextures);
+	
+	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+
+	glUniform1i(chessShaderProgram->u("whatToDraw"), CHESSBOARD);
+	
+    glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
+	
+	glm::mat4 model2Matrix = glm::translate(modelMatrix, glm::vec3(0.f, -0.5f, 0.f));
+	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(model2Matrix));
+	
+	glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
+
 	glVertexAttribPointer(chessShaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, false, 0, boardBaseVertices);
 	glVertexAttribPointer(chessShaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, false, 0, boardBaseTexCoords);
 
-	glUniform1i(chessShaderProgram->u("useTexture"), 0);
+	glUniform1i(chessShaderProgram->u("whatToDraw"), CHESSBOARD_BASE);
 
-	glm::mat4 baseModelMatrix = modelMatrix;
-	baseModelMatrix = glm::rotate(baseModelMatrix, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
+	glm::mat4 baseModelMatrix = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
 	baseModelMatrix = glm::scale(baseModelMatrix, glm::vec3(4.5f, 1.99f, 4.5f));
 	baseModelMatrix = glm::translate(baseModelMatrix, glm::vec3(0.11f, -0.126f, -0.11f));
+
 	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(baseModelMatrix));
+
 	glDrawArrays(GL_TRIANGLES, 0, boardBaseVertexCount);
 }
 
@@ -395,68 +448,31 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	modelMatrix = glm::rotate(modelMatrix, angle_y, glm::vec3(1.f, 0.f, 0.f));
 	modelMatrix = glm::rotate(modelMatrix, angle_x, glm::vec3(0.f, 1.f, 0.f));
 	glm::vec4 lightPosition = glm::vec4(0.f, 0.f, -6.f, -1.f);
+
     chessShaderProgram->use();
+
+	enableShaders();
+
 	glUniformMatrix4fv(chessShaderProgram->u("P"), 1, false, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(chessShaderProgram->u("V"), 1, false, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexCoordinatesName));
-	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexColorsName));
-	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexNormalsName));
-	glEnableVertexAttribArray(chessShaderProgram->a(shaderVertexTexturingCoordinatesName));
-	glEnableVertexAttribArray(chessShaderProgram->a("textureIndexIn"));
-	
-    glVertexAttribPointer(chessShaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, false, 0, boardVertices);
-	glVertexAttribPointer(chessShaderProgram->a(shaderVertexColorsName), 4, GL_FLOAT, false, 0, boardColors);
-	glVertexAttribPointer(chessShaderProgram->a(shaderVertexNormalsName), 4, GL_FLOAT, false, 0, boardNormals);
-	glVertexAttribPointer(chessShaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, false, 0, boardTexCoords);
-	glVertexAttribPointer(chessShaderProgram->a("textureIndexIn"), 1, GL_FLOAT, false, 0, boardTextures);
 
-	glActiveTexture(GL_TEXTURE0); 
-	glBindTexture(GL_TEXTURE_2D, blackTileTexture);
-	glActiveTexture(GL_TEXTURE1); 
-	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
-	glActiveTexture(GL_TEXTURE3); 
-	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
-	glActiveTexture(GL_TEXTURE4); 
-	glBindTexture(GL_TEXTURE_2D, whiteTileTexture);
-	glUniform1i(chessShaderProgram->u("blackTile"), 0);
-	glUniform1i(chessShaderProgram->u("whiteTile"), 1);
-	glUniform1i(chessShaderProgram->u("whiteFig"), 2);
-	glUniform1i(chessShaderProgram->u("blackFig"), 3);
-	
-	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-
-	glUniform1i(chessShaderProgram->u("useTexture"), 1);
-	
-    glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
-	
-	glm::mat4 M2 = glm::translate(modelMatrix, glm::vec3(0.f, -0.5f, 0.f));
-	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(M2));
-	
-	glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
-
+	drawChessboard(modelMatrix);	
 	
 	glm::mat4 spawn = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(-1.f, 0.f, 0.f));
 	spawn = glm::scale(spawn, glm::vec3(0.015f, 0.015f, 0.015f));
 	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, 4 * ONE_TILE, 0.f));
 	setupFigures(spawn);
 	
-	glUniform1i(chessShaderProgram->u("useTexture"), 2);
+	glUniform1i(chessShaderProgram->u("whatToDraw"), WHITE_FIGURE);
 	for(Figure* whiteFigure : whiteFigures)
 		drawFigure(whiteFigure);
 
-	glUniform1i(chessShaderProgram->u("useTexture"), 3);
+	glUniform1i(chessShaderProgram->u("whatToDraw"), BLACK_FIGURE);
 	for(Figure* blackFigure : blackFigures)
 		drawFigure(blackFigure);
 
-	drawBoardEdges(modelMatrix);	
-		
-    glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexCoordinatesName));
-	glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexColorsName));
-	glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexNormalsName));
-	glDisableVertexAttribArray(chessShaderProgram->a(shaderVertexTexturingCoordinatesName));
-	glDisableVertexAttribArray(chessShaderProgram->a("textureIndexIn"));
-	
+	disableShaders();
 	
     glfwSwapBuffers(window);
 }

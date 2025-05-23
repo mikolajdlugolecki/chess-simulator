@@ -5,12 +5,10 @@ Figure::Figure()
     this->modelMatrix = glm::mat4(1.f);
 }
 
-Figure::Figure(int initX, int initZ)
+Figure::Figure(int initPositionX, int initPositionZ)
 {
-    this->initX = initX;
-    this->initZ = initZ;
-    this->currentX = 0;
-    this->currentZ = 0;
+    this->positionX = initPositionX;
+    this->positionZ = initPositionZ;
 }
 
 Figure::~Figure()

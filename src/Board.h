@@ -152,21 +152,21 @@ float boardBaseNormals[] = {
 };
 
 float boardBaseTexCoords[] = {
-    0.f, 0.f,
-    1.f, 0.f,
-    0.5f, 1.f,
+    0.f, 1.f,
+    1.f, 1.f,
+    0.5f, 0.f,
 
-    0.f, 0.f,
-    1.f, 0.f,
-    0.5f, 1.f,
+    0.f, 1.f,
+    1.f, 1.f,
+    0.5f, 0.f,
 
-    1.f, 0.f,
-    0.f, 0.f,
-    0.5f, 1.f,
+    1.f, 1.f,
+    0.f, 1.f,
+    0.5f, 0.f,
 
-    1.f, 0.f,
-    0.f, 0.f,
-    0.5f, 1.f,
+    1.f, 1.f,
+    0.f, 1.f,
+    0.5f, 0.f,
 
     0.f, 0.f,
     1.f, 0.f,
