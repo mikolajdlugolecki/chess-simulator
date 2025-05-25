@@ -3,17 +3,25 @@
 Figure::Figure()
 {
     this->modelMatrix = glm::mat4(1.f);
+    this->inGame = true;
 }
 
 Figure::Figure(int initPositionX, int initPositionZ)
 {
     this->positionX = initPositionX;
     this->positionZ = initPositionZ;
+    this->inGame = true;
 }
 
 Figure::~Figure()
 {
 
+}
+
+void Figure::setPosition(int inputPositionX, int inputPositionZ)
+{
+    this->positionX = inputPositionX;
+    this->positionZ = inputPositionZ;
 }
 
 unsigned int Bishop::vertexCount = 0;

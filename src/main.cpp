@@ -56,6 +56,7 @@ void loadFigure(const char* fileName, unsigned int &vertexCount, std::vector<flo
 void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords);
 void initFigures(void);
 void setupFigures(glm::mat4 modelMatrix);
+void createFigures();
 void drawFigure(Figure *figure);
 void drawChessboard(glm::mat4 modelMatrix);
 void makeMoves(void);
@@ -206,6 +207,10 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			speedY = PI / 2;
         if(key == GLFW_KEY_DOWN)
 			speedY = -PI / 2;
+		if(key == GLFW_KEY_R)
+			createFigures();
+		if(key == GLFW_KEY_SPACE)
+			makeMoves();
     }
     if(action == GLFW_RELEASE){
         if(key == GLFW_KEY_LEFT)
@@ -287,6 +292,36 @@ void setupFigures(glm::mat4 modelMatrix)
 		blackFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(blackFigure->positionX * ONE_TILE, blackFigure->positionZ * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 }
 
+void createFigures()
+{
+	for(Figure* whiteFigure : whiteFigures)
+		delete whiteFigure;
+	for(Figure* blackFigure : blackFigures)
+		delete blackFigure;
+	whiteFigures.clear();
+	blackFigures.clear();
+	whiteFigures.push_back(new Rook(0, 0));
+	whiteFigures.push_back(new Knight(-1, 0));
+	whiteFigures.push_back(new Bishop(-2, 0));
+	whiteFigures.push_back(new Queen(-3, 0));
+	whiteFigures.push_back(new King(-4, 0));
+	whiteFigures.push_back(new Bishop(-5, 0));
+	whiteFigures.push_back(new Knight(-6, 0));
+	whiteFigures.push_back(new Rook(-7, 0));
+	blackFigures.push_back(new Rook(0, -7));
+	blackFigures.push_back(new Knight(-1, -7));
+	blackFigures.push_back(new Bishop(-2, -7));
+	blackFigures.push_back(new Queen(-3, -7));
+	blackFigures.push_back(new King(-4, -7));
+	blackFigures.push_back(new Bishop(-5, -7));
+	blackFigures.push_back(new Knight(-6, -7));
+	blackFigures.push_back(new Rook(-7, -7));
+	for(int i=0; i<8; i++){
+		whiteFigures.push_back(new Pawn(-i, -1));
+		blackFigures.push_back(new Pawn(-i, -6));
+	}
+}
+
 void readFile(void)
 {
 	std::string line = "";
@@ -306,7 +341,7 @@ void readFile(void)
 	}
 	file.close();
 }
-// TODO
+
 void makeMoves(void)
 {
 	int sourceX, sourceZ, destinationX, destinationZ;
@@ -326,8 +361,12 @@ void makeMoves(void)
 		}
 		for(Figure* figure : potentialFiguresToMove)
 			if(figure->positionX == -sourceX && figure->positionZ == -sourceZ){
-				figure->positionX = -destinationX;
-				figure->positionZ = -destinationZ;
+				figure->setPosition(-destinationX, -destinationZ);
+				break;
+			}
+			for(Figure* figure : potentialFiguresToDelete)
+			if(figure->positionX == -destinationX && figure->positionZ == -destinationZ){
+				figure->inGame = false;
 				break;
 			}
 	}
@@ -379,6 +418,8 @@ void freeOpenGLProgram(GLFWwindow* window)
 
 void drawFigure(Figure *figure)
 {
+	if(!figure->inGame)
+		return;
 	GLuint VAO;
 	unsigned int vertexCount;
 	if(dynamic_cast<Bishop*>(figure)){
@@ -491,24 +532,5 @@ void initFigures(void)
 	prepareFigure(Pawn::VAO, Pawn::VBO, &Pawn::vertices, &Pawn::normals, &Pawn::texCoords);
 	prepareFigure(Queen::VAO, Queen::VBO, &Queen::vertices, &Queen::normals, &Queen::texCoords);
 	prepareFigure(Rook::VAO, Rook::VBO, &Rook::vertices, &Rook::normals, &Rook::texCoords);
-	whiteFigures.push_back(new Rook(0, 0));
-	whiteFigures.push_back(new Knight(-1, 0));
-	whiteFigures.push_back(new Bishop(-2, 0));
-	whiteFigures.push_back(new Queen(-3, 0));
-	whiteFigures.push_back(new King(-4, 0));
-	whiteFigures.push_back(new Bishop(-5, 0));
-	whiteFigures.push_back(new Knight(-6, 0));
-	whiteFigures.push_back(new Rook(-7, 0));
-	blackFigures.push_back(new Rook(0, -7));
-	blackFigures.push_back(new Knight(-1, -7));
-	blackFigures.push_back(new Bishop(-2, -7));
-	blackFigures.push_back(new Queen(-3, -7));
-	blackFigures.push_back(new King(-4, -7));
-	blackFigures.push_back(new Bishop(-5, -7));
-	blackFigures.push_back(new Knight(-6, -7));
-	blackFigures.push_back(new Rook(-7, -7));
-	for(int i=0; i<8; i++){
-		whiteFigures.push_back(new Pawn(-i, -1));
-		blackFigures.push_back(new Pawn(-i, -6));
-	}
+	createFigures();
 }

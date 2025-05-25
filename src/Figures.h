@@ -14,6 +14,8 @@ public:
     virtual ~Figure();
     int positionX;
     int positionZ;
+    bool inGame;
+    void setPosition(int inputPositionX, int inputPositionZ);
 };
 
 class Bishop : public Figure
