@@ -8,14 +8,14 @@
 class Figure
 {
 public:
-    Figure();
     Figure(int initPositionX, int initPositionZ);
-    glm::mat4 modelMatrix;
     virtual ~Figure();
+    glm::mat4 modelMatrix;
     int positionX;
     int positionZ;
     bool inGame;
     void setPosition(int inputPositionX, int inputPositionZ);
+    bool onPosition(int inputPositionX, int inputPositionZ);
 };
 
 class Bishop : public Figure

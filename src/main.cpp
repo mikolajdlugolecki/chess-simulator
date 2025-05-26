@@ -301,24 +301,24 @@ void createFigures()
 	whiteFigures.clear();
 	blackFigures.clear();
 	whiteFigures.push_back(new Rook(0, 0));
-	whiteFigures.push_back(new Knight(-1, 0));
-	whiteFigures.push_back(new Bishop(-2, 0));
-	whiteFigures.push_back(new Queen(-3, 0));
-	whiteFigures.push_back(new King(-4, 0));
-	whiteFigures.push_back(new Bishop(-5, 0));
-	whiteFigures.push_back(new Knight(-6, 0));
-	whiteFigures.push_back(new Rook(-7, 0));
-	blackFigures.push_back(new Rook(0, -7));
-	blackFigures.push_back(new Knight(-1, -7));
-	blackFigures.push_back(new Bishop(-2, -7));
-	blackFigures.push_back(new Queen(-3, -7));
-	blackFigures.push_back(new King(-4, -7));
-	blackFigures.push_back(new Bishop(-5, -7));
-	blackFigures.push_back(new Knight(-6, -7));
-	blackFigures.push_back(new Rook(-7, -7));
+	whiteFigures.push_back(new Knight(1, 0));
+	whiteFigures.push_back(new Bishop(2, 0));
+	whiteFigures.push_back(new Queen(3, 0));
+	whiteFigures.push_back(new King(4, 0));
+	whiteFigures.push_back(new Bishop(5, 0));
+	whiteFigures.push_back(new Knight(6, 0));
+	whiteFigures.push_back(new Rook(7, 0));
+	blackFigures.push_back(new Rook(0, 7));
+	blackFigures.push_back(new Knight(1, 7));
+	blackFigures.push_back(new Bishop(2, 7));
+	blackFigures.push_back(new Queen(3, 7));
+	blackFigures.push_back(new King(4, 7));
+	blackFigures.push_back(new Bishop(5, 7));
+	blackFigures.push_back(new Knight(6, 7));
+	blackFigures.push_back(new Rook(7, 7));
 	for(int i=0; i<8; i++){
-		whiteFigures.push_back(new Pawn(-i, -1));
-		blackFigures.push_back(new Pawn(-i, -6));
+		whiteFigures.push_back(new Pawn(i, 1));
+		blackFigures.push_back(new Pawn(i, 6));
 	}
 }
 
@@ -360,13 +360,13 @@ void makeMoves(void)
 			potentialFiguresToDelete = whiteFigures;
 		}
 		for(Figure* figure : potentialFiguresToMove)
-			if(figure->positionX == -sourceX && figure->positionZ == -sourceZ){
-				figure->setPosition(-destinationX, -destinationZ);
-				break;
-			}
-			for(Figure* figure : potentialFiguresToDelete)
-			if(figure->positionX == -destinationX && figure->positionZ == -destinationZ){
-				figure->inGame = false;
+			if(figure->onPosition(sourceX, sourceZ)){
+				figure->setPosition(destinationX, destinationZ);
+				for(Figure* figure : potentialFiguresToDelete)
+					if(figure->onPosition(destinationX, destinationZ)){
+						figure->inGame = false;
+						break;
+					}
 				break;
 			}
 	}
