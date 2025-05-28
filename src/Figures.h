@@ -10,29 +10,27 @@
 
 enum figureColor
 {
-    BLACK = 0,
-    WHITE
+    WHITE = 0,
+    BLACK
 };
 
 class Figure
 {
 public:
     Figure(int initPositionX, int initPositionZ, bool color);
-    virtual ~Figure();
+    virtual ~Figure(void);
     glm::mat4 modelMatrix;
     int positionX;
     int positionZ;
     bool color;
     bool inGame;
-    bool animating = false;
+    bool animating;
     float currentX;
-    float currentY = 0.f;
     float currentZ;
     float targetX; 
-    float targetY;
     float targetZ;
-    float animationTime = 0.0f;
-    float animationDuration = 0.01f;
+    float animationTime;
+    static float animationDuration;
     void setPosition(int inputPositionX, int inputPositionZ);
     bool onPosition(int inputPositionX, int inputPositionZ);
     void startMove(int toX, int toZ);

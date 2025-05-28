@@ -1,14 +1,17 @@
 #include "Figures.h"
 
+float Figure::animationDuration = 0.01f;
+
 Figure::Figure(int initPositionX, int initPositionZ, bool figureColor)
 {
     this->positionX = initPositionX;
     this->positionZ = initPositionZ;
-    this->inGame = true;
     this->color = figureColor;
+    this->inGame = true;
+    this->animating = false;
 }
 
-Figure::~Figure(){}
+Figure::~Figure(void){}
 
 void Figure::setPosition(int inputPositionX, int inputPositionZ)
 {

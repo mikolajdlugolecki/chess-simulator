@@ -19,13 +19,11 @@
 #include "Board.h"
 #include "Figures.h"
 
-float speedX = 0;
-float speedY = 0;
 float aspectRatio = 1;
 
 std::vector<std::string> moveFromTile;
 std::vector<std::string> moveToTile;
-int moveCounter = 0;
+unsigned int moveCounter = 0;
 
 ShaderProgram *chessShaderProgram;
 
@@ -42,8 +40,8 @@ const char* shaderVertexTexturingCoordinatesName = "vertexTexturingCoordinates";
 std::vector<Figure*> whiteFigures;
 std::vector<Figure*> blackFigures;
 
-glm::vec3 offset=glm::vec3(-0.5f,0.5f,0.f); //vector do przesuwania centrum planszy
-glm::mat4 changeViewMatrix =glm::lookAt(glm::vec3(0.f, 10.f, -12.5f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f)); //domyslny widok (1)
+glm::vec3 offset = glm::vec3(-0.5f, 0.5f, 0.f);
+glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, -12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 
 enum whatToDraw
 {
@@ -59,10 +57,10 @@ void loadFigure(const char* fileName, unsigned int &vertexCount, std::vector<flo
 void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::vector<float> *normals, std::vector<float> *texCoords);
 void initFigures(void);
 void setupFigures(glm::mat4 modelMatrix);
-void createFigures();
+void createFigures(void);
 void drawFigure(Figure *figure);
 void drawChessboard(glm::mat4 modelMatrix);
-void makeMove(int move);
+void makeMove(unsigned int move);
 GLuint readTexture(const char* filename);
 void errorCallback(int error, const char* description);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -70,7 +68,7 @@ void windowResizeCallback(GLFWwindow* window, int width, int height);
 void enableShaders(void);
 void disableShaders(void);
 void initOpenGLProgram(GLFWwindow* window);
-void drawScene(GLFWwindow* window, float angle_x, float angle_y);
+void drawScene(GLFWwindow* window);
 void freeOpenGLProgram(GLFWwindow* window);
 
 int main(void)
@@ -81,7 +79,7 @@ int main(void)
 		std::cerr<<"Can't initialize GLFW."<<std::endl;
 		return EXIT_FAILURE;
 	}
-	window = glfwCreateWindow(1000, 1000, "OpenGL", NULL, NULL);
+	window = glfwCreateWindow(1000, 1000, "Chess Simulator", NULL, NULL);
 	if(!window){
 		glfwTerminate();
 		return EXIT_FAILURE;
@@ -94,14 +92,10 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 	initOpenGLProgram(window);
-	float angleX = 0;
-	float angleY = 0;
 	glfwSetTime(0);
 	while(!glfwWindowShouldClose(window)){
-        angleX += speedX * glfwGetTime();
-		angleY += speedY * glfwGetTime();
         glfwSetTime(0);
-		drawScene(window, angleX, angleY);
+		drawScene(window);
 		glfwPollEvents();
 	}
 	freeOpenGLProgram(window);
@@ -130,10 +124,10 @@ void initChessboard(void)
 				boardVertices[vertexIndex * 4 + 1] = py;
 				boardVertices[vertexIndex * 4 + 2] = pz;
 				boardVertices[vertexIndex * 4 + 3] = pw;
-				boardNormals[vertexIndex * 4 + 0] = 0.0f;
-				boardNormals[vertexIndex * 4 + 1] = 1.0f;
-				boardNormals[vertexIndex * 4 + 2] = 0.0f;
-				boardNormals[vertexIndex * 4 + 3] = 0.0f;
+				boardNormals[vertexIndex * 4 + 0] = 0.f;
+				boardNormals[vertexIndex * 4 + 1] = 1.f;
+				boardNormals[vertexIndex * 4 + 2] = 0.f;
+				boardNormals[vertexIndex * 4 + 3] = 0.f;
 				boardTexCoords[vertexIndex * 2 + 0] = tileTexCoords[k * 2 + 0];
                 boardTexCoords[vertexIndex * 2 + 1] = tileTexCoords[k * 2 + 1];
 				if(white){
@@ -202,39 +196,39 @@ void errorCallback(int error, const char* description)
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if(action == GLFW_PRESS){
-		if(key == GLFW_KEY_R)
-			createFigures();
-		if(key == GLFW_KEY_SPACE)
-			if (moveCounter < moveFromTile.size()){
-				makeMove(moveCounter++);
-			}
+		switch(key){
+			case GLFW_KEY_R:
+				createFigures();
+			break;
+			case GLFW_KEY_SPACE:
+				if(moveCounter < moveFromTile.size())
+					makeMove(moveCounter++);
+			break;
+			case GLFW_KEY_1:
+				offset = glm::vec3(-0.5f, 0.5f, 0.f);
+				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, -12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
+			break;
+			case GLFW_KEY_2:
+				offset = glm::vec3(-0.5f, 1.f, -0.5f);
+				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, 12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
+			break;
+			case GLFW_KEY_3:
+				offset = glm::vec3(0.f, 0.f, -0.5f);
+				viewMatrix = glm::lookAt(glm::vec3(10.f, 10.f, 0.f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
+			break;
+			case GLFW_KEY_4:
+				offset = glm::vec3(-1.f, 0.f, -0.5f);
+				viewMatrix = glm::lookAt(glm::vec3(-10.f, 10.f, 0.f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
+			break;
+		}
     }
-		if(key == GLFW_KEY_1){
-			offset=glm::vec3(-0.5f,0.5f,0.f);
-			changeViewMatrix =glm::lookAt(glm::vec3(0.f, 10.f, -12.5f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
-		}
-		if(key == GLFW_KEY_2){
-			offset=glm::vec3(-0.5f,1.0f,-0.5f);
-			changeViewMatrix =glm::lookAt(glm::vec3(0.f, 10.f, 12.5f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
-		}
-		if(key == GLFW_KEY_3){
-			offset=glm::vec3(0.f,0.f,-0.5f);
-			changeViewMatrix = glm::lookAt(glm::vec3(10.f, 10.f, 0.f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
-		}
-		if(key == GLFW_KEY_4){
-			offset=glm::vec3(-1.f,0.f,-0.5f);
-			changeViewMatrix = glm::lookAt(glm::vec3(-10.f, 10.f, 0.f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
-		}
-	}
-    if(action == GLFW_RELEASE){
-	}
 }
 
 void windowResizeCallback(GLFWwindow* window, int width, int height) 
 {
     if(height == 0)
 		return;
-    aspectRatio = (float)width / (float)height;
+    aspectRatio = static_cast<float>(width) / static_cast<float>(height);
     glViewport(0, 0, width, height);
 }
 
@@ -298,8 +292,9 @@ void setupFigures(glm::mat4 modelMatrix)
 		blackFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-blackFigure->positionX * ONE_TILE, -blackFigure->positionZ * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 }
 
-void createFigures()
+void createFigures(void)
 {
+	moveCounter = 0;
 	for(Figure* whiteFigure : whiteFigures)
 		delete whiteFigure;
 	for(Figure* blackFigure : blackFigures)
@@ -348,38 +343,41 @@ void readFile(void)
 	file.close();
 }
 
-void makeMove(int move)
+void makeMove(unsigned int move)
 {
 	int sourceX = boardMap[moveFromTile[move][0]];
-    int sourceZ = int(moveFromTile[move][1]) - '1';
+    int sourceZ = static_cast<int>(moveFromTile[move][1]) - '1';
     int destinationX = boardMap[moveToTile[move][0]];
-    int destinationZ = int(moveToTile[move][1]) - '1';
-	if(move % 2 == 0){
-		for(Figure* whiteFigure : whiteFigures){
-			if(whiteFigure->onPosition(sourceX, sourceZ)){
-				whiteFigure->startMove(-destinationX, -destinationZ);
-				for (Figure* blackFigure : blackFigures){
-					if(blackFigure->onPosition(destinationX, destinationZ)){
-						blackFigure->inGame = false;
-						break;
+    int destinationZ = static_cast<int>(moveToTile[move][1]) - '1';
+	switch(move % 2){
+		case WHITE:
+			for(Figure* whiteFigure : whiteFigures){
+				if(whiteFigure->onPosition(sourceX, sourceZ)){
+					whiteFigure->startMove(-destinationX, -destinationZ);
+					for (Figure* blackFigure : blackFigures){
+						if(blackFigure->onPosition(destinationX, destinationZ)){
+							blackFigure->inGame = false;
+							break;
+						}
 					}
+					break;
 				}
-				break;
 			}
-    	}
-	}else{
-		for(Figure* blackFigure : blackFigures){
-			if(blackFigure->onPosition(sourceX, sourceZ)){
-				blackFigure->startMove(destinationX, destinationZ);
-				for(Figure* whiteFigure : whiteFigures){
-					if(whiteFigure->onPosition(destinationX, destinationZ)){
-						whiteFigure->inGame = false;
-						break;
+		break;
+		case BLACK:
+			for(Figure* blackFigure : blackFigures){
+				if(blackFigure->onPosition(sourceX, sourceZ)){
+					blackFigure->startMove(destinationX, destinationZ);
+					for(Figure* whiteFigure : whiteFigures){
+						if(whiteFigure->onPosition(destinationX, destinationZ)){
+							whiteFigure->inGame = false;
+							break;
+						}
 					}
+					break;
 				}
-				break;
 			}
-		}
+		break;
 	}
 }
 
@@ -420,9 +418,9 @@ void freeOpenGLProgram(GLFWwindow* window)
 	glDeleteBuffers(3, Rook::VBO);
 	for(Figure* whiteFigure : whiteFigures)
 		delete whiteFigure;
+	whiteFigures.clear();
 	for(Figure* blackFigure : blackFigures)
 		delete blackFigure;
-	whiteFigures.clear();
 	blackFigures.clear();
 }
 
@@ -457,7 +455,7 @@ void drawFigure(Figure *figure)
 	glBindVertexArray(0);
 }
 
-void drawChessboard(glm::mat4 modelMatrix)
+void drawChessboard(glm::mat4 firstTilesMesh)
 {
 	glVertexAttribPointer(chessShaderProgram->a(shaderVertexCoordinatesName), 4, GL_FLOAT, false, 0, boardVertices);
 	glVertexAttribPointer(chessShaderProgram->a(shaderVertexColorsName), 4, GL_FLOAT, false, 0, boardColors);
@@ -465,14 +463,14 @@ void drawChessboard(glm::mat4 modelMatrix)
 	glVertexAttribPointer(chessShaderProgram->a(shaderVertexTexturingCoordinatesName), 2, GL_FLOAT, false, 0, boardTexCoords);
 	glVertexAttribPointer(chessShaderProgram->a("textureIndexIn"), 1, GL_FLOAT, false, 0, boardTextures);
 	
-	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(firstTilesMesh));
 
 	glUniform1i(chessShaderProgram->u("whatToDraw"), CHESSBOARD);
 	
     glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 	
-	glm::mat4 model2Matrix = glm::translate(modelMatrix, glm::vec3(0.f, -0.5f, 0.f));
-	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(model2Matrix));
+	glm::mat4 secondTilesMesh = glm::translate(firstTilesMesh, glm::vec3(0.f, -0.5f, 0.f));
+	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(secondTilesMesh));
 	
 	glDrawArrays(GL_TRIANGLES, 0, BOARD_VERTEX_COUNT);
 
@@ -481,23 +479,21 @@ void drawChessboard(glm::mat4 modelMatrix)
 
 	glUniform1i(chessShaderProgram->u("whatToDraw"), CHESSBOARD_BASE);
 
-	glm::mat4 baseModelMatrix = glm::rotate(modelMatrix, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
-	baseModelMatrix = glm::scale(baseModelMatrix, glm::vec3(4.5f, 1.99f, 4.5f));
-	baseModelMatrix = glm::translate(baseModelMatrix, glm::vec3(0.11f, -0.126f, -0.11f));
+	glm::mat4 chessboardBaseModelMatrix = glm::rotate(firstTilesMesh, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
+	chessboardBaseModelMatrix = glm::scale(chessboardBaseModelMatrix, glm::vec3(4.5f, 1.99f, 4.5f));
+	chessboardBaseModelMatrix = glm::translate(chessboardBaseModelMatrix, glm::vec3(0.11f, -0.126f, -0.11f));
 
-	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(baseModelMatrix));
+	glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(chessboardBaseModelMatrix));
 
 	glDrawArrays(GL_TRIANGLES, 0, boardBaseVertexCount);
 }
 
-void drawScene(GLFWwindow* window, float angle_x, float angle_y)
+void drawScene(GLFWwindow* window)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glm::mat4 viewMatrix = changeViewMatrix;
+
     glm::mat4 projectionMatrix = glm::perspective(45.f * PI / 180.f, aspectRatio, 1.f, 50.f);
     glm::mat4 modelMatrix = glm::mat4(1.f);
-	modelMatrix = glm::rotate(modelMatrix, angle_y, glm::vec3(1.f, 0.f, 0.f));
-	modelMatrix = glm::rotate(modelMatrix, angle_x, glm::vec3(0.f, 1.f, 0.f));
 	glm::vec4 lightPosition = glm::vec4(0.f, 0.f, -6.f, -1.f);
 
     chessShaderProgram->use();
