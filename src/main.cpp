@@ -42,6 +42,9 @@ const char* shaderVertexTexturingCoordinatesName = "vertexTexturingCoordinates";
 std::vector<Figure*> whiteFigures;
 std::vector<Figure*> blackFigures;
 
+glm::vec3 offset=glm::vec3(-0.5f,0.5f,0.f); //vector do przesuwania centrum planszy
+glm::mat4 changeViewMatrix =glm::lookAt(glm::vec3(0.f, 10.f, -12.5f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f)); //domyslny widok (1)
+
 enum whatToDraw
 {
 	CHESSBOARD = 0,
@@ -199,14 +202,6 @@ void errorCallback(int error, const char* description)
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if(action == GLFW_PRESS){
-        if(key == GLFW_KEY_LEFT) 
-			speedX = -PI / 2;
-        if(key == GLFW_KEY_RIGHT)
-			speedX = PI / 2;
-        if(key == GLFW_KEY_UP)
-			speedY = PI / 2;
-        if(key == GLFW_KEY_DOWN)
-			speedY = -PI / 2;
 		if(key == GLFW_KEY_R)
 			createFigures();
 		if(key == GLFW_KEY_SPACE)
@@ -214,15 +209,24 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 				makeMove(moveCounter++);
 			}
     }
+		if(key == GLFW_KEY_1){
+			offset=glm::vec3(-0.5f,0.5f,0.f);
+			changeViewMatrix =glm::lookAt(glm::vec3(0.f, 10.f, -12.5f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
+		}
+		if(key == GLFW_KEY_2){
+			offset=glm::vec3(-0.5f,1.0f,-0.5f);
+			changeViewMatrix =glm::lookAt(glm::vec3(0.f, 10.f, 12.5f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
+		}
+		if(key == GLFW_KEY_3){
+			offset=glm::vec3(0.f,0.f,-0.5f);
+			changeViewMatrix = glm::lookAt(glm::vec3(10.f, 10.f, 0.f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
+		}
+		if(key == GLFW_KEY_4){
+			offset=glm::vec3(-1.f,0.f,-0.5f);
+			changeViewMatrix = glm::lookAt(glm::vec3(-10.f, 10.f, 0.f)+offset, glm::vec3(0.f, 0.f, 0.f)+offset, glm::vec3(0.f, 1.f, 0.f));
+		}
+	}
     if(action == GLFW_RELEASE){
-        if(key == GLFW_KEY_LEFT)
-			speedX = 0;
-        if(key == GLFW_KEY_RIGHT)
-			speedX = 0;
-        if(key == GLFW_KEY_UP)
-			speedY = 0;
-        if(key == GLFW_KEY_DOWN)
-			speedY = 0;
 	}
 }
 
@@ -489,8 +493,8 @@ void drawChessboard(glm::mat4 modelMatrix)
 void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.f, 5.f, -12.5f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 1.f, 0.f));
-    glm::mat4 projectionMatrix = glm::perspective(50.f * PI / 180.f, aspectRatio, 1.f, 50.f);
+	glm::mat4 viewMatrix = changeViewMatrix;
+    glm::mat4 projectionMatrix = glm::perspective(45.f * PI / 180.f, aspectRatio, 1.f, 50.f);
     glm::mat4 modelMatrix = glm::mat4(1.f);
 	modelMatrix = glm::rotate(modelMatrix, angle_y, glm::vec3(1.f, 0.f, 0.f));
 	modelMatrix = glm::rotate(modelMatrix, angle_x, glm::vec3(0.f, 1.f, 0.f));
