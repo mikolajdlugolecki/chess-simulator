@@ -1,25 +1,85 @@
 #include "Figures.h"
 
-Figure::Figure(int initPositionX, int initPositionZ)
+Figure::Figure(int initPositionX, int initPositionZ, bool figureColor)
 {
-    this->positionX = -initPositionX;
-    this->positionZ = -initPositionZ;
+    this->positionX = initPositionX;
+    this->positionZ = initPositionZ;
     this->inGame = true;
+    this->color = figureColor;
 }
 
 Figure::~Figure(){}
 
 void Figure::setPosition(int inputPositionX, int inputPositionZ)
 {
-    this->positionX = -inputPositionX;
-    this->positionZ = -inputPositionZ;
+    this->positionX = inputPositionX;
+    this->positionZ = inputPositionZ;
 }
 
 bool Figure::onPosition(int inputPositionX, int inputPositionZ)
 {
-    if(this->positionX == -inputPositionX && this->positionZ == -inputPositionZ)
+    if(this->positionX == inputPositionX && this->positionZ == inputPositionZ)
         return true;
     return false;
+}
+
+void Figure::startMove(int toX, int toZ)
+{
+    this->currentX = this->positionX;
+    this->currentZ = this->positionZ;
+    this->targetX = toX;
+    this->targetZ = toZ;
+    this->animating = true;
+    this->animationTime = 0.0f;
+}
+
+void Figure::updateAnimation(float deltaTime)
+{
+    if(!this->animating)
+        return;
+    this->animationTime += deltaTime;
+    float currentTime = this->animationTime / this->animationDuration;
+    if(currentTime >= 1.0f){
+        currentTime = 1.0f;
+        this->animating = false;
+        if(this->color == WHITE){
+            this->positionX = -this->targetX;
+            this->positionZ = -this->targetZ;
+        }else{
+            this->positionX = this->targetX;
+            this->positionZ = this->targetZ;
+        }
+    }
+    float interpX; 
+    float interpZ;
+    float interpY;
+    if(currentTime < 0.33f) {
+        float liftT = currentTime / 0.33f;
+        interpY = 0.0f + (1.0f - 0.0f) * liftT;
+        interpX = 0;
+        interpZ = 0;
+    }else if(currentTime < 0.66f){
+        float moveT = (currentTime - 0.33f) / 0.33f;
+        if(this->color == BLACK){
+            interpX = (this->currentX - this->targetX) * moveT;
+            interpZ = (this->currentZ - this->targetZ) * moveT;
+        }else{
+            interpX = -(this->currentX + this->targetX) * moveT;
+            interpZ = -(this->currentZ + this->targetZ) * moveT;
+        }
+        interpY = 1.f;
+    }else{
+        float fallT = (currentTime - 0.66f) / 0.34f;
+        interpY = 1.0f + (0.0f - 1.0f) * fallT;
+        if(this->color == BLACK){
+            interpX = (this->currentX - this->targetX);
+            interpZ = (this->currentZ - this->targetZ);
+        }else{
+            interpX = -(this->currentX + this->targetX);
+            interpZ = -(this->currentZ + this->targetZ);
+        }
+    }
+    this->modelMatrix = glm::translate(this->modelMatrix, glm::vec3(-interpX * ONE_TILE, -interpZ * ONE_TILE, interpY * ONE_TILE));
 }
 
 unsigned int Bishop::vertexCount = 0;

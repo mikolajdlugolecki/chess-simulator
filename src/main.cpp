@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <unistd.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -18,14 +19,13 @@
 #include "Board.h"
 #include "Figures.h"
 
-#define ONE_TILE 66.6f
-
 float speedX = 0;
 float speedY = 0;
 float aspectRatio = 1;
 
 std::vector<std::string> moveFromTile;
 std::vector<std::string> moveToTile;
+int moveCounter = 0;
 
 ShaderProgram *chessShaderProgram;
 
@@ -59,7 +59,7 @@ void setupFigures(glm::mat4 modelMatrix);
 void createFigures();
 void drawFigure(Figure *figure);
 void drawChessboard(glm::mat4 modelMatrix);
-void makeMoves(void);
+void makeMove(int move);
 GLuint readTexture(const char* filename);
 void errorCallback(int error, const char* description);
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -210,7 +210,9 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		if(key == GLFW_KEY_R)
 			createFigures();
 		if(key == GLFW_KEY_SPACE)
-			makeMoves();
+			if (moveCounter < moveFromTile.size()){
+				makeMove(moveCounter++);
+			}
     }
     if(action == GLFW_RELEASE){
         if(key == GLFW_KEY_LEFT)
@@ -287,9 +289,9 @@ void prepareFigure(GLuint &VAO, GLuint *VBO, std::vector<float> *vertices, std::
 void setupFigures(glm::mat4 modelMatrix)
 {
 	for(Figure* whiteFigure : whiteFigures)
-		whiteFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3(whiteFigure->positionX * ONE_TILE, whiteFigure->positionZ * ONE_TILE, 0.f));
+		whiteFigure->modelMatrix = glm::translate(modelMatrix, glm::vec3(-whiteFigure->positionX * ONE_TILE, -whiteFigure->positionZ * ONE_TILE, 0.f));
 	for(Figure* blackFigure : blackFigures)
-		blackFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(blackFigure->positionX * ONE_TILE, blackFigure->positionZ * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
+		blackFigure->modelMatrix = glm::rotate(glm::translate(modelMatrix, glm::vec3(-blackFigure->positionX * ONE_TILE, -blackFigure->positionZ * ONE_TILE, 0.f)), glm::radians(180.f), glm::vec3(0.f, 0.f, 1.f));
 }
 
 void createFigures()
@@ -300,25 +302,25 @@ void createFigures()
 		delete blackFigure;
 	whiteFigures.clear();
 	blackFigures.clear();
-	whiteFigures.push_back(new Rook(0, 0));
-	whiteFigures.push_back(new Knight(1, 0));
-	whiteFigures.push_back(new Bishop(2, 0));
-	whiteFigures.push_back(new Queen(3, 0));
-	whiteFigures.push_back(new King(4, 0));
-	whiteFigures.push_back(new Bishop(5, 0));
-	whiteFigures.push_back(new Knight(6, 0));
-	whiteFigures.push_back(new Rook(7, 0));
-	blackFigures.push_back(new Rook(0, 7));
-	blackFigures.push_back(new Knight(1, 7));
-	blackFigures.push_back(new Bishop(2, 7));
-	blackFigures.push_back(new Queen(3, 7));
-	blackFigures.push_back(new King(4, 7));
-	blackFigures.push_back(new Bishop(5, 7));
-	blackFigures.push_back(new Knight(6, 7));
-	blackFigures.push_back(new Rook(7, 7));
+	whiteFigures.push_back(new Rook(0, 0, WHITE));
+	whiteFigures.push_back(new Knight(1, 0, WHITE));
+	whiteFigures.push_back(new Bishop(2, 0, WHITE));
+	whiteFigures.push_back(new Queen(3, 0, WHITE));
+	whiteFigures.push_back(new King(4, 0, WHITE));
+	whiteFigures.push_back(new Bishop(5, 0, WHITE));
+	whiteFigures.push_back(new Knight(6, 0, WHITE));
+	whiteFigures.push_back(new Rook(7, 0, WHITE));
+	blackFigures.push_back(new Rook(0, 7, BLACK));
+	blackFigures.push_back(new Knight(1, 7, BLACK));
+	blackFigures.push_back(new Bishop(2, 7, BLACK));
+	blackFigures.push_back(new Queen(3, 7, BLACK));
+	blackFigures.push_back(new King(4, 7, BLACK));
+	blackFigures.push_back(new Bishop(5, 7, BLACK));
+	blackFigures.push_back(new Knight(6, 7, BLACK));
+	blackFigures.push_back(new Rook(7, 7, BLACK));
 	for(int i=0; i<8; i++){
-		whiteFigures.push_back(new Pawn(i, 1));
-		blackFigures.push_back(new Pawn(i, 6));
+		whiteFigures.push_back(new Pawn(i, 1, WHITE));
+		blackFigures.push_back(new Pawn(i, 6, BLACK));
 	}
 }
 
@@ -342,33 +344,38 @@ void readFile(void)
 	file.close();
 }
 
-void makeMoves(void)
+void makeMove(int move)
 {
-	int sourceX, sourceZ, destinationX, destinationZ;
-	for(int i=0; i<moveFromTile.size(); i++){
-		sourceX = boardMap[moveFromTile[i][0]];
-		sourceZ = int(moveFromTile[i][1]) - 1 - 48;
-		destinationX = boardMap[moveToTile[i][0]];
-		destinationZ = int(moveToTile[i][1]) - 1 - 48;
-		std::vector<Figure*> potentialFiguresToMove;
-		std::vector<Figure*> potentialFiguresToDelete;
-		if(i % 2 == 0){
-			potentialFiguresToMove = whiteFigures;
-			potentialFiguresToDelete = blackFigures;
-		}else{
-			potentialFiguresToMove = blackFigures;
-			potentialFiguresToDelete = whiteFigures;
-		}
-		for(Figure* figure : potentialFiguresToMove)
-			if(figure->onPosition(sourceX, sourceZ)){
-				figure->setPosition(destinationX, destinationZ);
-				for(Figure* figure : potentialFiguresToDelete)
-					if(figure->onPosition(destinationX, destinationZ)){
-						figure->inGame = false;
+	int sourceX = boardMap[moveFromTile[move][0]];
+    int sourceZ = int(moveFromTile[move][1]) - '1';
+    int destinationX = boardMap[moveToTile[move][0]];
+    int destinationZ = int(moveToTile[move][1]) - '1';
+	if(move % 2 == 0){
+		for(Figure* whiteFigure : whiteFigures){
+			if(whiteFigure->onPosition(sourceX, sourceZ)){
+				whiteFigure->startMove(-destinationX, -destinationZ);
+				for (Figure* blackFigure : blackFigures){
+					if(blackFigure->onPosition(destinationX, destinationZ)){
+						blackFigure->inGame = false;
 						break;
 					}
+				}
 				break;
 			}
+    	}
+	}else{
+		for(Figure* blackFigure : blackFigures){
+			if(blackFigure->onPosition(sourceX, sourceZ)){
+				blackFigure->startMove(destinationX, destinationZ);
+				for(Figure* whiteFigure : whiteFigures){
+					if(whiteFigure->onPosition(destinationX, destinationZ)){
+						whiteFigure->inGame = false;
+						break;
+					}
+				}
+				break;
+			}
+		}
 	}
 }
 
@@ -386,7 +393,6 @@ void initOpenGLProgram(GLFWwindow* window)
 	blackFigureTexture = readTexture("texture/dark-wood.png");
 	initChessboard();
 	initFigures();
-	makeMoves();
 }
 
 void freeOpenGLProgram(GLFWwindow* window)
@@ -505,13 +511,20 @@ void drawScene(GLFWwindow* window, float angle_x, float angle_y)
 	spawn = glm::translate(spawn, glm::vec3(3 * ONE_TILE, 4 * ONE_TILE, 0.f));
 	setupFigures(spawn);
 	
+	float deltaTime = glfwGetTime();
+	glfwSetTime(0);
+
 	glUniform1i(chessShaderProgram->u("whatToDraw"), WHITE_FIGURE);
-	for(Figure* whiteFigure : whiteFigures)
+	for(Figure* whiteFigure : whiteFigures){
+		whiteFigure->updateAnimation(deltaTime);
 		drawFigure(whiteFigure);
+	}
 
 	glUniform1i(chessShaderProgram->u("whatToDraw"), BLACK_FIGURE);
-	for(Figure* blackFigure : blackFigures)
+	for(Figure* blackFigure : blackFigures){
+		blackFigure->updateAnimation(deltaTime);
 		drawFigure(blackFigure);
+	}
 
 	disableShaders();
 	
