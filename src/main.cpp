@@ -42,7 +42,8 @@ std::vector<Figure*> blackFigures;
 
 glm::vec3 offset = glm::vec3(-0.5f, 0.5f, 0.f);
 glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, -12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
-glm::vec4 lightPosition = glm::vec4(0.f, 10.f, 60.f, -1.f);
+glm::vec4 lightPositionTop = glm::vec4(0.f, 10.f, 60.f, -1.f);
+glm::vec4 lightPosition2 = glm::vec4(0.f, 0.f, -6.f, -1.f);
 float ambient = 0.2f;
 
 enum whatToDraw
@@ -209,22 +210,22 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			case GLFW_KEY_1:
 				offset = glm::vec3(-0.5f, 0.5f, 0.f);
 				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, -12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
-				lightPosition = glm::vec4(0.f, 10.f, 60.f, -1.f);
+				lightPositionTop = glm::vec4(0.f, 10.f, 60.f, -1.f);
 			break;
 			case GLFW_KEY_2:
 				offset = glm::vec3(-0.5f, 1.f, -0.5f);
 				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, 12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
-				lightPosition = glm::vec4(0.f, 10.f, -60.f, -1.f);
+				lightPositionTop = glm::vec4(0.f, 10.f, -60.f, -1.f);
 			break;
 			case GLFW_KEY_3:
 				offset = glm::vec3(0.f, 0.f, -0.5f);
 				viewMatrix = glm::lookAt(glm::vec3(10.f, 10.f, 0.f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
-				lightPosition = glm::vec4(-50.f, 10.f, 0.f, -1.f);
+				lightPositionTop = glm::vec4(-50.f, 10.f, 0.f, -1.f);
 			break;
 			case GLFW_KEY_4:
 				offset = glm::vec3(-1.f, 0.f, -0.5f);
 				viewMatrix = glm::lookAt(glm::vec3(-10.f, 10.f, 0.f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
-				lightPosition = glm::vec4(50.f, 10.f, 0.f, -1.f);
+				lightPositionTop = glm::vec4(50.f, 10.f, 0.f, -1.f);
 			break;
 			case GLFW_KEY_EQUAL:
 				ambient += 0.1f;
@@ -514,9 +515,9 @@ void drawScene(GLFWwindow* window)
 	glUniformMatrix4fv(chessShaderProgram->u("P"), 1, false, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(chessShaderProgram->u("V"), 1, false, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
-	glUniform4fv(chessShaderProgram->u("lp"), 1, glm::value_ptr(lightPosition));
+	glUniform4fv(chessShaderProgram->u("lp1"), 1, glm::value_ptr(lightPositionTop));
+	glUniform4fv(chessShaderProgram->u("lp2"), 1, glm::value_ptr(lightPosition2));
 	glUniform1f(chessShaderProgram->u("ambientU"), ambient);
-	std::cout<<lightPosition.x<<" "<<lightPosition.y<<" "<<lightPosition.z<<std::endl;
 
 	drawChessboard(modelMatrix);	
 	
