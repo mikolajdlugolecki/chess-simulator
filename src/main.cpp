@@ -392,7 +392,7 @@ void initOpenGLProgram(GLFWwindow* window)
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
 	whiteFigureTexture = readTexture("texture/light-wood.png");
-	blackFigureTexture = readTexture("texture/dark-wood.png");
+	blackFigureTexture = readTexture("texture/dark_chess.png");
 	initChessboard();
 	initFigures();
 }
