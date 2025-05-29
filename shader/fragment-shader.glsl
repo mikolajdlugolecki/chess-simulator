@@ -25,7 +25,7 @@ void main(void){
 	float nl = clamp(dot(_l, _n), 0, 1);
 	float rv = clamp(dot(r, _v), 0, 1);
 	vec4 texColor;
-    rv = pow(rv, 50);
+    rv = pow(rv, 25);
 	if(whatToDraw == 0){
 		if(textureIndex == 0)
 			texColor = texture(blackTileTexture, interpolatedTexturingCoordinates);
