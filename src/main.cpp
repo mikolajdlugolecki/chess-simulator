@@ -503,6 +503,7 @@ void drawScene(GLFWwindow* window)
 	glUniformMatrix4fv(chessShaderProgram->u("P"), 1, false, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(chessShaderProgram->u("V"), 1, false, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
+	// glVertexAttribPointer(chessShaderProgram->u("lp"), 1, false, glm::value_ptr(lightPosition));
 
 	drawChessboard(modelMatrix);	
 	
