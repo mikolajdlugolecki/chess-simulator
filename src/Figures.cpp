@@ -9,9 +9,15 @@ Figure::Figure(int initPositionX, int initPositionZ, bool figureColor)
     this->color = figureColor;
     this->inGame = true;
     this->animating = false;
+    this->capturedPiece = nullptr;
+    this->captureHandled = false;
 }
 
-Figure::~Figure(void){}
+Figure::~Figure(void)
+{
+    this->capturedPiece = nullptr;
+    delete this->capturedPiece;
+}
 
 void Figure::setPosition(int inputPositionX, int inputPositionZ)
 {
@@ -56,7 +62,7 @@ void Figure::updateAnimation(float deltaTime)
     float interpX; 
     float interpZ;
     float interpY;
-    if(currentTime < 0.33f) {
+    if(currentTime < 0.33f){
         float liftT = currentTime / 0.33f;
         interpY = 0.0f + (1.0f - 0.0f) * liftT;
         interpX = 0;
@@ -80,6 +86,10 @@ void Figure::updateAnimation(float deltaTime)
         }else{
             interpX = -(this->currentX + this->targetX);
             interpZ = -(this->currentZ + this->targetZ);
+        }
+        if(!this->captureHandled && this->capturedPiece != nullptr){
+            this->capturedPiece->inGame = false;
+            this->captureHandled = true;
         }
     }
     this->modelMatrix = glm::translate(this->modelMatrix, glm::vec3(-interpX * ONE_TILE, -interpZ * ONE_TILE, interpY * ONE_TILE));

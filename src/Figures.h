@@ -31,6 +31,8 @@ public:
     float targetZ;
     float animationTime;
     static float animationDuration;
+    Figure* capturedPiece;
+    bool captureHandled;
     void setPosition(int inputPositionX, int inputPositionZ);
     bool onPosition(int inputPositionX, int inputPositionZ);
     void startMove(int toX, int toZ);
