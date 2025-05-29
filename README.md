@@ -1,4 +1,5 @@
 # Chess Simulator
+A C++ and OpenGL-based application that visually simulates pre-recorded chess games from a file. The program renders a 3D chessboard and animates each move step-by-step, providing a simple and interactive way to replay full games.
 
 ## Table of Contents
 * [Requirements](#requirements)
@@ -31,13 +32,13 @@ make
 ```
 
 ## Controls
-| **Key**   | **Action**                            |
-| --------- | ------------------------------------- |
-| **Space** | **Make move**                         |
-| **R**     | **Restart game**                      |
-| **1**     | **Whites' perspective**               |
-| **2**     | **Blacks' perspective**               |
-| **3**     | **Blacks' on left, whites' on right** |
-| **4**     | **Whites' on left, blacks' on right** |
-| **+**     | **Increase ambient**                  |
-| **-**     | **Decrease ambient**                  |
+| **Key**   | **Action**                          |
+| --------- | ----------------------------------- |
+| **Space** | _Make move_                         |
+| **R**     | _Restart game_                      |
+| **1**     | _Whites' perspective_               |
+| **2**     | _Blacks' perspective_               |
+| **3**     | _Blacks' on left, whites' on right_ |
+| **4**     | _Whites' on left, blacks' on right_ |
+| **+**     | _Increase ambient_                  |
+| **-**     | _Decrease ambient_                  |
