@@ -29,10 +29,12 @@ void main(void){
     vec4 reflectDir2 = reflect(-lightDir2, norm);
     float diff2 = max(dot(norm, lightDir2), 0.0);
     float spec2 = pow(max(dot(viewDir, reflectDir2), 0.0), 50.0);
-    vec3 color = vec3(1.0f);
+
+    vec3 color = vec3(1.0, 1.0, 1.0);
+
     vec3 ambient  = vec3(ambientU);
-    vec3 diffuse  = (diff1+diff2) * vec3(0.5)*color;
-    vec3 specular = (spec1+spec2) * vec3(1)*color;
+    vec3 diffuse  = diff1 * color * vec3(0.5) + diff2 * color * vec3(0.5);
+    vec3 specular = spec1 * color * vec3(0.3) + spec2 * color * vec3(0.3);
 
     vec3 lighting = ambient + diffuse + specular;
 
@@ -60,5 +62,5 @@ void main(void){
         break;
     }
 
-    pixelColor = vec4(texColor.rgb * (ambient+diffuse)+specular, texColor.a);
+    pixelColor = vec4(texColor.rgb * (ambient + diffuse) + specular, texColor.a);
 }
