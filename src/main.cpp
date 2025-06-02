@@ -197,27 +197,25 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 				offset = glm::vec3(-0.5f, 0.5f, 0.f);
 				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, -12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 				topLightingPosition = glm::vec4(0.f, 10.f, 60.f, -1.f);
+				frontLightingPosition = glm::vec4(0.f, 0.f, -6.f, -1.f);
 			break;
 			case GLFW_KEY_2:
 				offset = glm::vec3(-0.5f, 1.f, -0.5f);
 				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, 12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 				topLightingPosition = glm::vec4(0.f, 10.f, -60.f, -1.f);
+				frontLightingPosition = glm::vec4(0.f, 0.f, 14.f, -1.f);
 			break;
 			case GLFW_KEY_3:
 				offset = glm::vec3(0.f, 0.f, -0.5f);
 				viewMatrix = glm::lookAt(glm::vec3(10.f, 10.f, 0.f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 				topLightingPosition = glm::vec4(-50.f, 10.f, 0.f, -1.f);
+				frontLightingPosition = glm::vec4(10.f, 0.f, 4.f, -1.f);
 			break;
 			case GLFW_KEY_4:
 				offset = glm::vec3(-1.f, 0.f, -0.5f);
 				viewMatrix = glm::lookAt(glm::vec3(-10.f, 10.f, 0.f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 				topLightingPosition = glm::vec4(50.f, 10.f, 0.f, -1.f);
-			break;
-			case GLFW_KEY_EQUAL:
-				ambient += 0.1f;
-			break;
-			case GLFW_KEY_MINUS:
-				ambient -= 0.1f;
+				frontLightingPosition = glm::vec4(-10.f, 0.f, -16.f, -1.f);
 			break;
 		}
     }
@@ -383,7 +381,7 @@ void makeMove(unsigned int move)
 void initOpenGLProgram(GLFWwindow* window)
 {
 	readFile();
-	glClearColor(0, 0, 0, 1);
+	glClearColor(0.3, 0.3, 0.3, 1);
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	glfwSetKeyCallback(window, keyCallback);
