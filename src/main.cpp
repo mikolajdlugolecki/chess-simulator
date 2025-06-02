@@ -388,8 +388,8 @@ void initOpenGLProgram(GLFWwindow* window)
 	chessShaderProgram = new ShaderProgram("shader/vertex-shader.glsl", NULL, "shader/fragment-shader.glsl");
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
-	whiteFigureTexture = readTexture("texture/light-wood.png");
-	blackFigureTexture = readTexture("texture/dark-wood.png");
+	whiteFigureTexture = readTexture("texture/white_marble.png");
+	blackFigureTexture = readTexture("texture/102590.png");
 	initChessboard();
 	initFigures();
 }

@@ -46,9 +46,13 @@ void main(void){
                 texColor = texture(blackTileTexture, interpolatedTexturingCoordinates);
             else
                 texColor = texture(whiteTileTexture, interpolatedTexturingCoordinates);
+            specular = (spec1+spec2) * vec3(0.3);
+            ambient=vec3(0.7f);
         break;
         case 1:
             texColor = texture(blackTileTexture, interpolatedTexturingCoordinates);
+            specular = (spec1+spec2) * vec3(0.3);
+            ambient=vec3(0.7f);
         break;
         case 2:
             texColor = texture(whiteFigureTexture, interpolatedTexturingCoordinates);
