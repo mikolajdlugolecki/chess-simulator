@@ -39,7 +39,6 @@ glm::vec3 offset = glm::vec3(-0.5f, 0.5f, 0.f);
 glm::mat4 viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, -12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 glm::vec4 topLightingPosition = glm::vec4(0.f, 10.f, 60.f, -1.f);
 glm::vec4 frontLightingPosition = glm::vec4(0.f, 0.f, -6.f, -1.f);
-float ambient = 0.2f;
 
 enum whatToDraw
 {
@@ -347,10 +346,10 @@ void makeMove(unsigned int move)
 	switch(move % 2){
 		case WHITE:
 			for(Figure* whiteFigure : whiteFigures){
-				if(whiteFigure->onPosition(sourceX, sourceZ)){
+				if(whiteFigure->onPosition(sourceX, sourceZ) && whiteFigure->inGame){
 					whiteFigure->startMove(-destinationX, -destinationZ);
 					for(Figure* blackFigure : blackFigures){
-						if(blackFigure->onPosition(destinationX, destinationZ)){
+						if(blackFigure->onPosition(destinationX, destinationZ) && blackFigure->inGame){
 							whiteFigure->capturedPiece = blackFigure;
 							whiteFigure->captureHandled = false;
 							break;
@@ -362,10 +361,10 @@ void makeMove(unsigned int move)
 		break;
 		case BLACK:
 			for(Figure* blackFigure : blackFigures){
-				if(blackFigure->onPosition(sourceX, sourceZ)){
+				if(blackFigure->onPosition(sourceX, sourceZ) && blackFigure->inGame){
 					blackFigure->startMove(destinationX, destinationZ);
 					for(Figure* whiteFigure : whiteFigures){
-						if(whiteFigure->onPosition(destinationX, destinationZ)){
+						if(whiteFigure->onPosition(destinationX, destinationZ) && whiteFigure->inGame){
 							blackFigure->capturedPiece = whiteFigure;
 							blackFigure->captureHandled = false;
 							break;
@@ -388,8 +387,8 @@ void initOpenGLProgram(GLFWwindow* window)
 	chessShaderProgram = new ShaderProgram("shader/vertex-shader.glsl", NULL, "shader/fragment-shader.glsl");
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
-	whiteFigureTexture = readTexture("texture/white_marble.png");
-	blackFigureTexture = readTexture("texture/102590.png");
+	whiteFigureTexture = readTexture("texture/white-marble.png");
+	blackFigureTexture = readTexture("texture/black-marble.png");
 	initChessboard();
 	initFigures();
 }
@@ -500,7 +499,6 @@ void drawScene(GLFWwindow* window)
     glUniformMatrix4fv(chessShaderProgram->u("M"), 1, false, glm::value_ptr(modelMatrix));
 	glUniform4fv(chessShaderProgram->u("topLightingWorldPosition"), 1, glm::value_ptr(topLightingPosition));
 	glUniform4fv(chessShaderProgram->u("frontLightingWorldPosition"), 1, glm::value_ptr(frontLightingPosition));
-	glUniform1f(chessShaderProgram->u("ambientU"), ambient);
 
 	drawChessboard(modelMatrix);	
 	

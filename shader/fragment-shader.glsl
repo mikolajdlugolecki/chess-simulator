@@ -5,7 +5,6 @@ uniform sampler2D blackTileTexture;
 uniform sampler2D whiteFigureTexture;
 uniform sampler2D blackFigureTexture;
 uniform int whatToDraw;
-uniform float ambientU;
 
 in vec2 interpolatedTexturingCoordinates;
 in vec4 topLightingEyePosition;
@@ -30,13 +29,9 @@ void main(void){
     float diff2 = max(dot(norm, lightDir2), 0.0);
     float spec2 = pow(max(dot(viewDir, reflectDir2), 0.0), 50.0);
 
-    vec3 color = vec3(1.0, 1.0, 1.0);
-
-    vec3 ambient  = vec3(ambientU);
-    vec3 diffuse  = diff1 * color * vec3(0.5) + diff2 * color * vec3(0.5);
-    vec3 specular = spec1 * color * vec3(0.3) + spec2 * color * vec3(0.3);
-
-    vec3 lighting = ambient + diffuse + specular;
+    vec3 ambient  = vec3(0.2);
+    vec3 diffuse  = (diff1 + diff2) * vec3(0.5); 
+    vec3 specular = vec3(spec1 + spec2);
 
     vec4 texColor;
 
@@ -46,19 +41,19 @@ void main(void){
                 texColor = texture(blackTileTexture, interpolatedTexturingCoordinates);
             else
                 texColor = texture(whiteTileTexture, interpolatedTexturingCoordinates);
-            specular = (spec1+spec2) * vec3(0.3);
-            ambient=vec3(0.7f);
+            specular *= vec3(0.3);
         break;
         case 1:
             texColor = texture(blackTileTexture, interpolatedTexturingCoordinates);
-            specular = (spec1+spec2) * vec3(0.3);
-            ambient=vec3(0.7f);
+            specular *= vec3(0.3);
         break;
         case 2:
             texColor = texture(whiteFigureTexture, interpolatedTexturingCoordinates);
+            specular *= vec3(0.9);
         break;
         case 3:
             texColor = texture(blackFigureTexture, interpolatedTexturingCoordinates);
+            specular *= vec3(0.9);
         break;
     }
 
