@@ -197,11 +197,13 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 				offset = glm::vec3(-0.5f, 0.5f, 0.f);
 				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, -12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 				topLightingPosition = glm::vec4(0.f, 10.f, 60.f, -1.f);
+				//frontLightingPosition = glm::vec4(0.f, 0.f, -6.f, -1.f);
 			break;
 			case GLFW_KEY_2:
 				offset = glm::vec3(-0.5f, 1.f, -0.5f);
 				viewMatrix = glm::lookAt(glm::vec3(0.f, 10.f, 12.5f) + offset, glm::vec3(0.f, 0.f, 0.f) + offset, glm::vec3(0.f, 1.f, 0.f));
 				topLightingPosition = glm::vec4(0.f, 10.f, -60.f, -1.f);
+				//frontLightingPosition = glm::vec4(-90.f, 45.f, 90.f, -1.f);
 			break;
 			case GLFW_KEY_3:
 				offset = glm::vec3(0.f, 0.f, -0.5f);
@@ -383,15 +385,15 @@ void makeMove(unsigned int move)
 void initOpenGLProgram(GLFWwindow* window)
 {
 	readFile();
-	glClearColor(0, 0, 0, 1);
+	glClearColor(0.3, 0.3, 0.3,1);
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowSizeCallback(window, windowResizeCallback);
 	glfwSetKeyCallback(window, keyCallback);
 	chessShaderProgram = new ShaderProgram("shader/vertex-shader.glsl", NULL, "shader/fragment-shader.glsl");
 	whiteTileTexture = readTexture("texture/white-tile.png");
 	blackTileTexture = readTexture("texture/black-tile.png");
-	whiteFigureTexture = readTexture("texture/light-wood.png");
-	blackFigureTexture = readTexture("texture/dark-wood.png");
+	whiteFigureTexture = readTexture("texture/white_marble.png");
+	blackFigureTexture = readTexture("texture/102590.png");
 	initChessboard();
 	initFigures();
 }
