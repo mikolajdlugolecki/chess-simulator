@@ -9,6 +9,7 @@ A C++ and OpenGL-based application that visually simulates pre-recorded chess ga
 * [Game's file format](#games-file-format)
 
 ## Preview
+https://github.com/user-attachments/assets/8c2a688f-1317-4571-9f20-39cb2e476a27
 
 ## Requirements
 * [glew](https://github.com/nigels-com/glew) (v2.2.0 or higher)
@@ -37,14 +38,14 @@ make
 ```
 
 ## Controls
-| **Key**   | **Action**                          |
-| --------- | ----------------------------------- |
-| **Space** | _Make move_                         |
-| **R**     | _Restart game_                      |
-| **1**     | _Whites' perspective_               |
-| **2**     | _Blacks' perspective_               |
-| **3**     | _Blacks' on left, whites' on right_ |
-| **4**     | _Whites' on left, blacks' on right_ |
+| **Key**   | **Action**                                |
+| --------- | ----------------------------------------- |
+| **Space** | _Make move_                               |
+| **R**     | _Restart game_                            |
+| **1**     | _Whites perspective_                      |
+| **2**     | _Blacks perspective_                      |
+| **3**     | _Blacks on the left, whites on the right_ |
+| **4**     | _Whites on the left, blacks on the right_ |
 
 ## Game's file format
 
